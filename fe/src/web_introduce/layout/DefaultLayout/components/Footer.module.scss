@@ -1,0 +1,121 @@
+.cs-bg-footer {
+  padding-top     : 75px;
+  height          : auto;
+  min-height      : 432px;
+  background-color: var(--gl-footer-dark);
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -15px;
+}
+
+.col {
+  flex: 1;
+  padding: 0 15px;
+  margin-bottom: 20px;
+}
+
+.cs-head-text {
+  font-family  : 'Dancing Script';
+  margin-bottom: 20px;
+}
+
+.cs-text-desc {
+  font-size: 16px;
+  margin   : 5px 0;
+}
+
+.cs-bl-icon {
+  display        : flex;
+  justify-content: center;
+  margin         : 20px 0 10px 0;
+
+  .cs-item-icon {
+    width           : 30px;
+    height          : 30px;
+    border-radius   : 999px;
+    background-color: #fff;
+    display         : flex;
+    justify-content : center;
+    align-items     : center;
+    margin          : 0 3px;
+
+    .cs-icon {
+      font-size: 20px;
+      color    : var(--gl-footer-dark);
+    }
+  }
+}
+
+.cs-text-copyright-1 {
+  font-size  : 16px;
+  padding-top: 60px;
+  color      : #fff;
+  text-align : center;
+}
+
+.cs-text-copyright-2 {
+  font-size  : 16px;
+  padding-top: 16px;
+  color      : #fff;
+  text-align : center;
+}
+
+.cs-map {
+  margin-top   : 30px;
+  text-align   : center;
+
+  iframe {
+    width : 60%;
+    height: 250px;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .cs-bg-footer {
+    padding-top: 40px;
+    padding-bottom: 20px;
+  }
+  
+  .row {
+    flex-direction: column;
+  }
+  
+  .col {
+    width: 100%;
+    margin-bottom: 30px;
+  }
+  
+  .cs-head-text {
+    font-size: 24px;
+    margin-bottom: 15px;
+  }
+  
+  .cs-text-desc {
+    font-size: 14px;
+  }
+  
+  .cs-map iframe {
+    width: 100%;
+    height: 200px;
+  }
+  
+  .cs-text-copyright-1 {
+    padding-top: 20px;
+    font-size: 14px;
+  }
+  
+  .cs-text-copyright-2 {
+    font-size: 14px;
+  }
+}

@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  db:
+    container_name: db
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: myuserpassword
+      MYSQL_DATABASE: mydb
+    ports:
+      - 3309:3306
+    networks:
+      - emc_network
+    volumes:
+      - emc_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  web:
+    container_name: web
+    build:
+      context: .
+      args:
+        - SERVICE=web
+    restart: always
+    ports:
+      - 8000:80
+    volumes:
+      - ".:/app:rw"
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:80 --workers=3 --reload
+    networks:
+      - emc_network
+    env_file: .env.dev
+    depends_on:
+      - db
+
+  socket:
+    container_name: socket
+    build:
+      context: .
+      args:
+        - SERVICE=socket
+    volumes:
+        - ".:/app:rw"  # 👈 Mount toàn bộ source code
+    restart: always
+    ports:
+      - 5001:5000
+    command: uvicorn core.asgi:application --host 0.0.0.0 --port 5000 --reload
+    networks:
+      - emc_network
+    env_file: .env.dev
+
+
+networks:
+  emc_network:
+    driver: bridge
+
+volumes:
+  emc_mysql_data:

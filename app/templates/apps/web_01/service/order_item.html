@@ -1,0 +1,555 @@
+{% import "/apps/web_01/commom/macros.html" as macros %}
+
+<div class="p-3 mb-3 border rounded bg-light">
+    <div class="row">
+        <div class="col-md-6">
+            <p class="mb-1"><strong><i class="fas fa-chair text-secondary"></i> Bàn:</strong> 
+                <span id="tableNumber">Bàn {{ table_id }}</span>
+            </p>
+            <p class="mb-1"><strong><i class="fas fa-user me-1"></i>Khách hàng:</strong> 
+                <span id="customerName">{{ customer_name }}</span>
+            </p>
+        </div>
+        <div class="col-md-6 text-end">
+            <p class="mb-1">
+                <strong>
+                    <i class="fas fa-clock me-1"></i>
+                    Giờ vào:
+                </strong> 
+                <span id="entryTime" class="timer">{{ session.started_at.strftime('%d/%m/%Y %H:%M') }}</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+{% for order in order_details %}
+    <div class="card mb-3 border shadow-sm {% if order.status == 'paid' %}opacity-50{% endif %}">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 px-3 rounded-top">
+            <!-- Trái: Checkbox + Tên đơn -->
+            <div class="d-flex align-items-center">
+                <input class="form-check-input me-2 order-checkbox"
+                       type="checkbox"
+                       value="{{ order.order_id }}"
+                       data-total="{{ order.order_total }}"
+                       data-status="{{ order.status }}"
+                       {% if order.status == 'completed' %}checked disabled{% endif %}>
+                <strong>Đơn hàng #{{ loop.index }}</strong>
+            </div>
+        
+            <!-- Phải: Trạng thái + Tổng tiền -->
+            <div class="d-flex align-items-center gap-3">
+                <!-- Trạng thái với tooltip -->
+                {% if order.status == 'completed' %}
+                    <span class="badge bg-success d-inline-flex align-items-center"
+                          >
+                        <i class="fas fa-check-circle me-1"></i> Đã thanh toán
+                    </span>
+                {% elif order.status == 'pending' %}
+                    <span class="badge bg-warning d-inline-flex align-items-center"
+                          >
+                        <i class="fas fa-hourglass-half me-1"></i> Chưa thanh toán
+                    </span>
+                {% else %}
+                    <span class="badge bg-secondary d-inline-flex align-items-center"
+                         >
+                        <i class="fas fa-question-circle me-1"></i> Không xác định
+                    </span>
+                {% endif %}
+        
+                <!-- Tổng tiền -->
+                <span class="text-muted small">
+                    Tổng: <strong class="text-dark">{{ macros.format_currency(order.order_total) }}</strong>
+                </span>
+            </div>
+        </div>
+        <div class="card-body p-2 dropzone" 
+        data-order-id="{{ order.order_id }}" 
+        data-order-status="{{ order.status }}"
+        >
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Món</th>
+                        <th>Số lượng</th>
+                        <th>Giá</th>
+                        <th>Thành tiền</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.order_details %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <img src="{{ item.product_image_url }}" width="35" class="me-2 rounded">
+                            {{ item.product_name }}
+                        </td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ macros.format_currency(item.price) }}</td>
+                        <td>{{ macros.format_currency(item.total) }}</td>
+                        <td>
+                        {% if item.status == 'pending' %}
+                            <span class="badge bg-warning " >
+                                <span class="fas fa-stream me-1"></span> Chờ
+                            </span>
+                        {% elif item.status == 'in_progress' %}
+                            <span class="badge bg-primary" >
+                                <i class="fas fa-redo me-1"></i> Đang chế biến
+                            </span>
+                        {% elif item.status == 'completed' %}
+                            <span class="badge bg-success" >
+                                <i class="fas fa-check me-1"></i> Hoàn thành
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger" >
+                                <i class="fas fa-times me-1"></i> Đã hủy
+                            </span>
+                        {% endif %}
+                        </td>
+                        <td>
+                            {% if item.status not in ['completed','cancelled'] %}
+                            <div class="dropdown text-sans-serif">
+                                <button class="btn btn-sm btn-light sharp {% if item.status == 'completed' %}disabled{% endif %}"
+                                        type="button"
+                                        id="dropdown-item-{{ item.item_id }}"
+                                        data-bs-toggle="dropdown"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                        {% if item.status in ['completed','cancelled'] %}disabled{% endif %}>
+                                    <svg width="18px" height="18px" viewBox="0 0 24 24">
+                                        <g fill="none" fill-rule="evenodd">
+                                            <circle fill="#000000" cx="5" cy="12" r="2"></circle>
+                                            <circle fill="#000000" cx="12" cy="12" r="2"></circle>
+                                            <circle fill="#000000" cx="19" cy="12" r="2"></circle>
+                                        </g>
+                                    </svg>
+                                </button>
+                                {% if item.status != 'completed' %}
+                                <div class="dropdown-menu dropdown-menu-end border py-0"
+                                     aria-labelledby="dropdown-item-{{ item.item_id }}">
+                                    <div class="py-2">
+                                        {% if item.status in ['in_progress','pending'] %}
+
+                                            {% if item.status != 'in_progress' %}
+                                            <a class="dropdown-item update-status-option" href="#!"
+                                                data-order-id="{{ order.order_id }}"
+                                                data-item-id="{{ item.item_id }}" 
+                                                data-product-name="{{ item.product_name }}" 
+                                            
+                                                data-status="in_progress">
+                                                <i class="fas fa-redo me-1"></i> Chế biến
+                                             </a>
+                                            {%endif%}
+                                            <a class="dropdown-item update-status-option" href="#!"
+                                                data-order-id="{{ order.order_id }}"
+                                                data-product-name="{{ item.product_name }}" 
+                                                data-item-id="{{ item.item_id }}" data-status="completed">
+                                                <i class="fas fa-check me-1"></i> Hoàn thành   
+                                            </a>
+
+                                            {% if item.status == 'pending' %}
+                                            <a class="dropdown-item update-status-option" href="#!"
+                                                data-order-id="{{ order.order_id }}"
+                                                data-product-name="{{ item.product_name }}" 
+                                                data-item-id="{{ item.item_id }}" data-status="cancelled">
+                                                <i class="fas fa-trash-alt me-1"></i> Hủy
+                                            </a>
+                                            {%endif%}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endfor %}
+{% if not all_paid %}
+<div class="row g-3">
+    <div class="col-md-6">
+        <label class="form-label">Phương thức thanh toán:</label>
+        <div class="payment-methods d-flex flex-wrap " style='gap:10px;'>
+            <button class="btn btn-outline-info active btn-sm" data-value='cash' id="btn-cash">
+                <i class="fas fa-money-bill-wave"></i> Tiền mặt
+            </button>
+            <button class="btn btn-outline-info btn-sm" id="btn-card" data-value='momo'>
+                <i class="fas fa-credit-card"></i> Momo
+            </button>
+            <button class="btn btn-outline-info btn-sm" id="btn-bank" data-value="bank_transfer">
+                <i class="fas fa-university"></i> Chuyển khoản
+            </button>
+       
+        </div>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Giảm giá:</label>
+        <div class="d-flex gap-2 mb-3">
+            <button class="btn btn-outline-primary btn-xxs" onclick="setDiscount(5)">5%</button>
+            <button class="btn btn-outline-primary btn-xxs" onclick="setDiscount(10)">10%</button>
+            <button class="btn btn-outline-primary btn-xxs" onclick="setDiscount(15)">15%</button>
+            <button class="btn btn-outline-primary btn-xxs" onclick="setDiscount(20)">20%</button>
+        </div>
+        <div class="input-group input-group-sm">
+            <input type="number" min="0" max="100" class="form-control" 
+                   id="discountInput" placeholder="Nhập % giảm giá">
+            <span class="input-group-text">%</span>
+        </div>
+    </div>
+</div>
+{% endif %}
+<hr/>
+
+<div class="row mb-3 align-items-center">
+    <div class='col-md-4 text-start'>
+        {% if not all_paid %}
+        Tổng tiền đã chọn: <strong id="finalSelectedTotal">0đ</strong>
+        {%endif%}
+    </div>
+    <div class='col-md-8 text-end'>
+        {% if not all_paid %}
+        <button class="btn btn-primary me-2" data-bs-toggle="tooltip" data-placement="top" title="Thanh toán các hóa đơn đã được chọn." onclick="confirm_payment()">
+            <i class="fas fa-money-bill-wave"></i> Thanh toán
+        </button>
+        {%endif%}
+        <span class='h-100 d-inline-block' 
+        {% if not all_paid %}
+        data-bs-toggle="tooltip" data-placement="top" title="Cần thanh toán trước khi đóng phiên bàn."
+        {%endif%}
+        >
+            <button type="button"
+                    class="btn btn-secondary"
+                    onclick='end_session({{session.id}})'
+                    {% if not all_paid %}disabled
+                    {% endif %}>
+                <i class="fas fa-sign-out-alt"></i> Kết thúc phiên
+            </button>
+        </span>
+    </div>
+ </div>
+
+{% with 
+    modal_id = 'modalPreviewPayment',
+    modal_title='Phiếu thanh toán',
+    modal_class_size='modal-md'
+  %}
+    {% include '/popup/popup_preview.html' %}
+{%endwith%}
+
+{% block script %}
+<script type="text/javascript">
+
+   
+
+
+    function confirm_payment() {
+        const selectedOrders = $(".order-checkbox:checked").map(function () {
+            return $(this).val();
+        }).get();
+
+        if (selectedOrders.length === 0) {
+            alert("Vui lòng chọn ít nhất một đơn hàng để thanh toán!");
+            return;
+        }
+
+        $('#modalPreviewPayment').modal('show');
+    
+        let tableNumber = $('#tableNumber').text();
+        let entryTime = $('#entryTime').text();
+        let customerName = $('#customerName').text();
+
+        let totalAmount = 0;
+        $(".order-checkbox:checked").each(function () {
+            totalAmount += parseFloat($(this).data("total"));
+        });
+
+        let discountPercent = parseInt($('#discountInput').val()) || 0;
+        let discountAmount = Math.round((totalAmount * discountPercent) / 100);
+        let amountDue = totalAmount - discountAmount;
+
+        let paymentMethod = $(".payment-methods .btn.active").html();
+    
+        let html_preview = `
+            <div class="preview-payment">
+                <p><strong>Bàn:</strong> ${tableNumber}</p>
+                <p><strong>Ngày & Giờ vào:</strong> ${entryTime}</p>
+                <p><strong>Khách hàng:</strong> ${customerName}</p>
+                <hr/>
+                <p><strong>Tạm tính:</strong> ${totalAmount.toLocaleString()}đ</p>
+                <p><strong>Tiền giảm (${discountPercent}%):</strong> ${discountAmount.toLocaleString()}đ</p>
+                <p><strong>Tổng tiền phải trả:</strong> <span id="finalSelectedTotal">${amountDue.toLocaleString()}đ</span></p>
+                <p><strong>Phương thức thanh toán:</strong> ${paymentMethod}</p>
+                <hr/>
+                <div class="text-end">
+                    <button id="confirmPayment" class="btn btn-success">
+                        <i class="fas fa-check-circle"></i> Xác nhận thanh toán
+                    </button>
+                </div>
+            </div>
+        `;
+    
+        $('#modalPreviewPayment #modalBody').html(html_preview);
+    }
+
+    var draggedProduct = null;
+    function updateSelectedOrdersTotal() {
+        let total = 0;
+        $(".order-checkbox:checked").each(function () {
+            let is_completed = $(this).data("status") == 'completed'; 
+            if(!is_completed) {
+                total += parseFloat($(this).data("total"));
+            }
+        });
+        let percent = parseInt($('#discountInput').val()) || 0;
+        total = total - (total * percent/100);
+        $("#finalSelectedTotal").text(total.toLocaleString() + "đ");
+    }
+
+    function end_session(session_id) {
+        if (!confirm("Bạn có chắc chắn muốn kết thúc phiên này?")) return;
+    
+        $.ajax({
+            url: "{{ url('web_01:end_session') }}",
+            type: "POST",
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            contentType: "application/json",
+            data: JSON.stringify({ session_id: session_id }),
+            success: function (res) {
+                location.reload();
+                if (socket.readyState === WebSocket.OPEN) {
+                    // Socket đã mở, có thể gửi ngay
+                    socket.send(JSON.stringify({
+                        type: "end_session",
+                        session_id: session_id
+                    }));
+                }
+            },
+            error: function (err) {
+                console.error(err);
+            }
+        });
+    }
+    
+    $(document).ready(function() {
+        $('[data-bs-toggle="tooltip"]').tooltip();
+
+       
+    
+     
+
+        $(document).on('change', '.order-checkbox', function () {
+            updateSelectedOrdersTotal();
+        });
+
+        $(".payment-methods .btn").click(function () {
+            $(".payment-methods .btn").removeClass("active");
+            $(this).addClass("active");
+        });
+
+        function updateDiscount(percent) {
+            let total = 0;
+            $(".order-checkbox:checked").each(function () {
+                let is_completed = $(this).data("status") == 'completed'; 
+                if(!is_completed) {
+                    total += parseFloat($(this).data("total"));
+                }
+            });
+            const discountAmount = Math.round((total * percent) / 100);
+            $("#finalSelectedTotal").text((total - discountAmount).toLocaleString() + 'đ');
+        }
+
+        $("#discountInput").on('input', function() {
+            let percent = parseInt($(this).val()) || 0;
+            if (percent < 0) percent = 0;
+            if (percent > 100) percent = 100;
+            $(this).val(percent);
+            updateDiscount(percent);
+        });
+
+        window.setDiscount = function(percent) {
+            $("#discountInput").val(percent);
+            updateDiscount(percent);
+        };
+
+        $('#modalPreviewPayment').on('click','#confirmPayment',function() {
+            const discountPercent = parseInt($("#discountInput").val()) || 0;
+            const selectedOrders = $(".order-checkbox:checked").map(function () {
+                return $(this).val();
+            }).get();
+
+            let total = 0;
+            $(".order-checkbox:checked").each(function () {
+                total += parseFloat($(this).data("total"));
+            });
+
+            const finalSelectedTotalText = $("#finalSelectedTotal").text().replace(/[^\d]/g, '');
+            const finalSelectedTotal = parseFloat(finalSelectedTotalText) || 0;
+            const payment_method = $(".payment-methods .btn.active").data('value');
+
+            const orderData = {
+                table_id: {{ table_id }},
+                order_ids: selectedOrders,
+                discount_percent: discountPercent,
+                discount_amount: total - finalSelectedTotal,
+                total: finalSelectedTotal,
+                payment_method: payment_method
+            };
+
+            $.ajax({
+                url: "{{ url('web_01:complete_payment_multi_order') }}",
+                type: "POST",
+                contentType: "application/json",
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                data: JSON.stringify(orderData),
+                success: function (res) {
+                    $('#modalPreviewPayment').modal('hide');
+                    $('#orderContents').html(res);
+                },
+                error: function (error) {
+                    console.error("Lỗi khi xác nhận thanh toán:", error);
+                    alert("Đã xảy ra lỗi khi thanh toán. Vui lòng thử lại.");
+                }
+            });
+        });
+
+
+        $(document).on('click', '.update-status-option', function () {
+            const orderId = $(this).data('order-id');
+            const itemId = $(this).data('item-id');
+            const status = $(this).data('status');
+            const product_name = $(this).data('product-name');
+            $.ajax({
+                url: "{{ url('web_01:update_item_status') }}",
+                method: "POST",
+                headers: { "X-CSRFToken": "{{ csrf_token }}" },
+                contentType: "application/json",
+                data: JSON.stringify({
+                    table_id: "{{table_id}}",
+                    order_id: orderId,
+                    item_id: itemId,
+                    status: status
+                }),
+                success: function (res) {
+                    $('#orderContents').html(res)
+                    socket_update_order_status_detail("product_status",product_name,"{{ table_id }}",status)
+                },
+                error: function (err) {
+                    console.error(err);
+                }
+            });
+        });
+
+       
+
+        // GẮN LẠI dragstart (với .off để tránh duplicate)
+        $(document).off("dragstart", ".draggable-product").on("dragstart", ".draggable-product", function (e) {
+            const $menuItem = $(this).closest(".menu-item");
+        
+            draggedProduct = {
+                id: $menuItem.data("product-id"),
+                name: $menuItem.data("product-name"),
+                price: $menuItem.data("product-price"),
+                image: $menuItem.data("product-image"),
+                html: $menuItem.prop("outerHTML")
+            };
+        
+            const dragPreview = document.createElement("div");
+            dragPreview.style.position = "absolute";
+            dragPreview.style.top = "-9999px";
+            dragPreview.style.padding = "5px";
+            dragPreview.style.background = "white";
+            dragPreview.style.border = "1px solid #ccc";
+            dragPreview.style.borderRadius = "5px";
+            dragPreview.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+            dragPreview.innerHTML = `
+                <img src="${draggedProduct.image}" style="width: 50px; height: 50px; object-fit: cover; margin-right: 5px; border-radius: 4px;">
+                <strong>${draggedProduct.name}</strong><br>
+                <span>${draggedProduct.price}đ</span>
+            `;
+            document.body.appendChild(dragPreview);
+        
+            e.originalEvent.dataTransfer.setDragImage(dragPreview, 0, 0);
+        
+            setTimeout(() => {
+                document.body.removeChild(dragPreview);
+            }, 100);
+        
+            e.originalEvent.dataTransfer.setData("application/json", JSON.stringify(draggedProduct));
+        });
+        
+        // GỠ và GẮN lại sự kiện dropzone
+        $(".dropzone").off("dragover dragleave drop");
+        
+        $(".dropzone").on("dragover", function (e) {
+            const status = $(this).data("order-status");
+        
+            if (status === "completed") {
+                $(this).addClass("blocked");
+                return;
+            }
+            e.preventDefault();
+            $(this).addClass("border-success");
+        
+        }).on("dragleave", function () {
+            $(this).removeClass("border-success blocked");
+        
+        }).on("drop", function (e) {
+            e.preventDefault();
+            $(this).removeClass("border-success");
+        
+            const orderId = $(this).data("order-id");
+            const orderStatus = $(this).data("order-status");
+        
+            if (orderStatus === 'completed') {
+                alert("Không thể thêm sản phẩm vào đơn đã hoàn tất!");
+                return;
+            }
+        
+            const rawData = e.originalEvent.dataTransfer.getData("application/json");
+        
+            if (!rawData) {
+                alert("Không lấy được dữ liệu sản phẩm khi kéo!");
+                return;
+            }
+        
+            const draggedProduct = JSON.parse(rawData);
+        
+            $.ajax({
+                url: "{{ url('web_01:add_product_to_order') }}",
+                method: "POST",
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                contentType: "application/json",
+                data: JSON.stringify({
+                    table_id: "{{ table_id }}",
+                    order_id: orderId,
+                    product_id: draggedProduct.id,
+                    quantity: 1
+                }),
+                success: function (res) {
+                    $('#orderContents').html(res);
+        
+                    // Sau khi nội dung order thay đổi, nếu có dropzone trong res, cần gắn lại sự kiện
+                    setTimeout(() => {
+                        $(".dropzone").off("dragover dragleave drop");
+                        // Gắn lại dragover, dragleave, drop tương tự ở đây nếu cần
+                    }, 100);
+
+                    socket_update_order_status_detail("product_status",'',"{{ table_id }}",'')
+                },
+                error: function (err) {
+                    console.error("Lỗi khi thêm sản phẩm:", err);
+                }
+            });
+        });
+        
+
+
+    });
+</script>
+{% endblock %}

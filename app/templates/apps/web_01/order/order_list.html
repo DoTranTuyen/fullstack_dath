@@ -1,0 +1,143 @@
+
+{% extends '/base/base.html'%}
+{% import "/apps/web_01/commom/macros.html" as macros %}
+{%block body%}
+<div class="col-lg-12">
+
+    <!-- Card table list-->
+    <div id='data-table-list'>
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Quản lí hóa đơn</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-responsive-md" id='table_data'>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Phương thức thanh toán</th>
+                                <th>Tổng tiền</th>
+                                <th>Ngày tạo</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+</div>
+
+
+
+{% with 
+    modal_id = 'modalDetailInvoice',
+    modal_title='Chi tiết hóa đơn',
+    modal_class_size='modal-xl',
+    modal_body_tmp = '/apps/web_01/modal/modal_detail_order.html'
+  %}
+    {% include '/popup/popup_create.html' %}
+  {%endwith%}
+
+
+  
+{%endblock%}
+
+{% block script %}
+<script type="text/javascript">
+    
+    $(document).ready(function () {
+        var table = $('#table_data').DataTable({
+            ...DATATABLE_CONFIG,
+            processing: true,
+            serverSide: true,
+            autoWidth: false,  // Chặn DataTables tự động đặt width cố định
+            responsive: true,
+            ajax: {
+                url: "{{url('web_01:order_list')}}",
+                type: "POST",
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                data: function (d) {
+                    let params = {
+                        search: d.search.value,
+                        start: d.start,
+                        length: d.length,
+                        order_column: d.order[0]?.column || 0,
+                        order_dir: d.order[0]?.dir || "asc"
+                    };
+                    d.params = JSON.stringify(params);
+                },
+                beforeSend: function () {
+                    disable_element($('#table_data'));
+                },
+                complete: function () {
+                    enable_element($('#table_data'));
+                }
+            },
+            columns: [
+                { data: "index", title: "#"},
+                { data: "id", title: "Mã hóa đơn",
+                    render: function(data, type, row) {
+                    return `#00${data}`;
+                 }
+                },
+                { data: "customer_name", title: "Khách hàng"},
+                { 
+                    data: "payment_method_display", 
+                    title: "Phương thức thanh toán",
+                    render: function(data, type, row) {
+                        let methodClass = '';
+                        
+                        // Xác định lớp CSS dựa trên phương thức thanh toán
+                        switch (data) {
+                            case 'Tiền mặt':
+                                methodClass = 'secondary';
+                                break;
+                            case 'Chuyển khoản':
+                                methodClass = 'success';
+                                break;
+                            case 'Momo':
+                                methodClass = 'info';
+                                break;
+                            default:
+                                methodClass = 'primary';
+                        }
+                        // Trả về phương thức thanh toán với lớp CSS tương ứng
+                        return `<span class="badge light badge-${methodClass}">${data}</span>`;
+                    }
+                },
+                { data: "total_amount", title: "Tổng tiền"},
+                { data: "created_at", title: "Ngày tạo"},
+                {
+                    data: "id",
+                    title: "",
+                    render: function(data, type, row) {
+                        return `
+                        <button type='button' class="btn light btn-info shadow btn-xs sharp me-1" 
+                        data-id="${row.id}" 
+                        data-bs-toggle="modal" data-bs-target="#modalDetailInvoice"
+                        >
+                            <i class="fa fa-eye"></i> <!-- Xem chi tiết -->
+                        </button>
+                        `;
+                    }
+                }
+            ]
+        });
+
+       
+    })
+  
+
+  
+
+</script>
+{% endblock %}

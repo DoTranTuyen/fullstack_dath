@@ -1,0 +1,50 @@
+{% import "/apps/web_01/commom/macros.html" as macros %}
+<div class="card">
+    <div class="card-header">
+        <h4 class="card-title mb-0">Best Seller Products</h4>
+    </div>
+    <div class="card-body p-0">
+        {% for product in best_sellers %}
+        <div class="media items-list-1 align-items-center">
+            <span class="number col-1 px-0 align-self-center">#{{ loop.index }}</span>
+        
+            <span style='width:100px;height:100px;display:block;' class='me-3' >
+                <img class="rounded w-100 h-100" style='width:100px!important;height:100px!important;'   src="{{ product.product__image.url }}" alt="{{ product.product__name }}">
+            </span>
+        
+            <div class="">
+                <h5 class="">
+                    <span class="text-black" >{{ product.product__name }}</a>
+                </h5>
+                <small class="">
+                    <strong class="text-secondary me-2">{{ macros.format_currency(product.product__price) }}</strong>
+                    <span class="text-primary">{{ product.product__category__name }}</span>
+                </small>
+            </div>
+        
+            <div class="media-footer ms-auto col-sm-3 mt-sm-0 mt-3 px-0 d-flex align-self-center align-items-center">
+                <div class="me-3">
+                    <!-- Nếu không có biểu đồ thật, để tạm static SVG -->
+                    <span class="peity-success" data-style="width:100%;" style="display: none;">1,3,2,4</span>
+                    <svg class="peity" height="30" width="47">
+                        <polygon fill="rgba(48, 194, 89, .2)" points="0 28.5 0 28.5 15.6 15 31.3 21.75 47 1.5 47 28.5"></polygon>
+                        <polyline fill="none" points="0 28.5 15.6 15 31.3 21.75 47 1.5" stroke="#30c259" stroke-width="3" stroke-linecap="square"></polyline>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="mb-0 font-w600 text-black">{{ product.total_sales }}</h3>
+                    <span class="fs-14">
+                        Sales 
+                        {% if product.growth >= 0 %}
+                            (<span class="text-success">+{{ product.growth }}%</span>)
+                        {% else %}
+                            (<span class="text-danger">{{ product.growth }}%</span>)
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+    </div>
+</div>

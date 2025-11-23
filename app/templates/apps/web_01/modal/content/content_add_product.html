@@ -1,0 +1,298 @@
+<form method="POST" action="{{ url('web_01:add_product') }}" enctype="multipart/form-data" id="createProductForm" novalidate>
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"/> 
+
+    <!-- Thông tin sản phẩm -->
+    <div class="card border border-secondary shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-box"></i> Thông Tin Sản Phẩm</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                        {{ form.name }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">{{ form.category.label }}</label>
+                        {{ form.category }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label for="{{ form.price.id_for_label }}" class="form-label">{{ form.price.label }}</label>
+                        {{ form.price }}
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="form-group mb-3">
+                        <label for="{{ form.image.id_for_label }}" class="form-label">{{ form.image.label }}</label>
+                        {{ form.image }}
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-group mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                        {{ form.description }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkbox kiểm soát hiển thị nguyên liệu -->
+<div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" id="toggle-ingredients">
+    <label class="form-check-label" for="toggle-ingredients">
+        <strong>Nguyên liệu</strong>
+    </label>
+</div>
+
+<!-- Thông tin nguyên liệu (mặc định ẩn) -->
+<div class="card border border-secondary shadow-sm d-none" id="ingredients-card">
+    <div class="card-header bg-light">
+        <h5 class="mb-0"><i class="fas fa-carrot"></i> Nguyên Liệu</h5>
+    </div>
+    <div class="card-body">
+        <div id="ingredient-list">
+            <div class="row ingredient-item align-items-center mb-2">
+                <div class="col-md-7">
+                    <div class="form-group">
+                        <label  class="form-label">Nguyên liệu</label>
+                        <select name="ingredient[]" class="ingredient-select form-control form-control-sm" required>
+                            <option value="">Chọn nguyên liệu...</option>
+                            {% for ingredient in ingredients %}
+                                <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label  class="form-label">Số lượng</label>
+                        <input type="number" name="quantity[]" class="ingredient-quantity form-control form-control-sm text-center" min="1" value="1" required>
+                        <small class="help-block text-danger"></small>
+                    </div>
+                </div>
+                <div class="col-md-1 text-end">
+                    <button type="button" class="remove-ingredient btn btn-danger btn-sm">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <button type="button" id="add-ingredient" class="btn btn-primary btn-sm mt-2">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+    
+</div>
+
+
+    <div class="text-end mt-3">
+        <button type="submit" class="btn btn-success btn-sm">
+            <i class="fas fa-check"></i> Lưu
+        </button>
+    </div>
+</form>
+
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        // Toggle hiển thị danh sách nguyên liệu
+        $("#toggle-ingredients").change(function () {
+            let isChecked = $(this).is(":checked");
+            $("#ingredients-card").toggleClass("d-none", !isChecked);
+            if (isChecked && $(".ingredient-item").length === 0) {
+                addIngredient();
+            }
+            updateDisabledIngredients();
+        });
+
+        // Khi thay đổi nguyên liệu, cập nhật danh sách disabled
+        $(document).on("change", ".ingredient-select", function () {
+            updateDisabledIngredients();
+        });
+
+        // Khi thêm nguyên liệu mới
+        $("#add-ingredient").click(function () {
+            addIngredient();
+            updateDisabledIngredients();
+        });
+
+        // Khi xóa nguyên liệu, cập nhật danh sách disabled
+        $(document).on("click", ".remove-ingredient", function () {
+            $(this).closest(".ingredient-item").remove();
+            updateDisabledIngredients();
+        });
+
+
+
+    
+        // Khởi tạo select2 cho danh mục sản phẩm
+        $('#category-select').select2({ dropdownParent: $("#modalAddProduct") });
+    
+        // Khởi tạo validator cho form
+        $('#createProductForm').bootstrapValidator({
+            fields: {
+                "{{ form.name.name }}": { 
+                    validators: { notEmpty: { message: 'Trường này bắt buộc!' } } 
+                },
+                "{{ form.category.name }}": { 
+                    validators: { notEmpty: { message: 'Trường này bắt buộc!' } } 
+                },
+                "{{ form.price.name }}": { 
+                    validators: { 
+                        notEmpty: { message: 'Trường này bắt buộc!' }, 
+                        numeric: { message: 'Giá sản phẩm phải là số' } 
+                    } 
+                },
+                "{{ form.description.name }}": { 
+                    validators: { notEmpty: { message: 'Trường này bắt buộc!' } } 
+                },
+                "{{ form.image.name }}": { 
+                    validators: { 
+                        notEmpty: { message: 'Trường này bắt buộc!' }, 
+                        file: { 
+                            extension: 'jpeg,jpg,png', 
+                            type: 'image/jpeg,image/png', 
+                            message: 'Chỉ chấp nhận tệp ảnh (JPG, PNG)' 
+                        } 
+                    } 
+                },
+                "ingredient[]": {  
+                    validators: {
+                        notEmpty: { message: 'Trường này bắt buộc!' }
+                    }
+                },
+                "quantity[]": {  
+                    validators: {
+                        notEmpty: { message: 'Trường này bắt buộc!' },
+                    }
+                }
+            }
+        }).on('success.form.bv', function (e) {
+            e.preventDefault();
+            let form = $(this);
+            let formData = new FormData(form[0]);
+    
+            let ingredients = [];
+            $(".ingredient-item").each(function () {
+                let ingredientId = $(this).find(".ingredient-select").val();
+                let quantity = $(this).find(".ingredient-quantity").val();
+                ingredients.push({ id: ingredientId, quantity: quantity });
+            });
+    
+            if ($("#toggle-ingredients").is(":checked") && ingredients.length === 0) {
+                alert("Bạn cần thêm ít nhất một nguyên liệu.");
+                return;
+            }
+    
+            formData.append("ingredients", JSON.stringify(ingredients));
+            disable_element($('#createProductForm'));
+    
+            $.ajax({
+                type: "POST",
+                url: form.attr("action"),
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: "json",
+                success: function (response) {
+                    if (response.success) {
+                        show_msg_success('#message', response.message);
+                        is_reloading = true;
+                        $('#createProductForm').data('bootstrapValidator').resetForm(true);
+                        $("#ingredients-card").addClass("d-none");
+                        $("#toggle-ingredients").prop("checked", false);
+                        $("#ingredient-list").empty();
+                        enable_element($('#createProductForm'));
+                    }
+                },
+                error: function (xhr) {
+                    alert("Có lỗi xảy ra: " + JSON.stringify(xhr.responseJSON.errors));
+                }
+            });
+        });
+    
+        // Xử lý thêm và xóa nguyên liệu
+    
+        function addIngredient() {
+            let ingredientItem = `
+                <div class="row ingredient-item align-items-center mb-2">
+                    <div class="col-md-7">
+                        <div class="form-group">
+                            <label  class="form-label">Nguyên liệu</label>
+                            <select name="ingredient[]" class="ingredient-select form-control form-control-sm">
+                                <option value="">Chọn nguyên liệu...</option>
+                                {% for ingredient in ingredients %}
+                                    <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label  class="form-label">Số lượng</label>
+                            <input type="number" name="quantity[]" class="ingredient-quantity form-control form-control-sm text-center" min="1" value="1">
+                        </div>
+                    </div>
+                    <div class="col-md-1 text-end">
+                        <button type="button" class="remove-ingredient btn btn-danger btn-sm">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            $("#ingredient-list").append(ingredientItem);
+    
+            // Cập nhật validator khi thêm input mới
+            $('#createProductForm').bootstrapValidator('addField', 'ingredient[]');
+            $('#createProductForm').bootstrapValidator('addField', 'quantity[]');
+    
+            validateIngredients();
+        }
+    
+        function validateIngredients() {
+            $(".remove-ingredient").toggle($(".ingredient-item").length > 1);
+        }
+
+        function updateDisabledIngredients() {
+            let selectedIngredients = [];
+        
+            // Thu thập tất cả các giá trị đã chọn
+            $(".ingredient-item").each(function () {
+                let ingredientId = $(this).find(".ingredient-select").val();
+                if (ingredientId) {
+                    selectedIngredients.push(ingredientId);
+                }
+            });
+        
+            // Cập nhật trạng thái disable cho các select
+            $(".ingredient-item").each(function () {
+                let selectBox = $(this).find(".ingredient-select");
+                let currentValue = selectBox.val();
+        
+                // Bật lại tất cả các option trước
+                selectBox.find("option").prop("disabled", false);
+        
+                // Disable các option đã chọn trong các select khác
+                selectedIngredients.forEach(id => {
+                    if (id !== currentValue) { // Không disable chính giá trị đang chọn
+                        selectBox.find("option[value='" + id + "']").prop("disabled", true);
+                    }
+                });
+            });
+        }
+        
+
+    
+        validateIngredients();
+    });
+    
+    
+</script>
+{% endblock %}

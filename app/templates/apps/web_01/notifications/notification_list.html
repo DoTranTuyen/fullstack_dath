@@ -1,0 +1,709 @@
+{% extends '/base/base.html'%}
+
+{% block title %}Quản lý thông báo{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title">Quản lý thông báo</h4>
+                    <div class="d-flex">
+                        <button id="mark-all-read-btn" class="btn btn-primary btn-sm me-2">
+                            <i class="fas fa-check-double me-1"></i> Đánh dấu tất cả đã đọc
+                        </button>
+
+                        {% if is_manager %}
+                        <button id="delete-selected-btn" class="btn btn-danger btn-sm" disabled>
+                            <i class="fas fa-trash me-1"></i> Xóa đã chọn
+                        </button>
+                        {%endif%}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="notification-filters mb-4">
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <select id="filter-type" class="form-select form-select-sm">
+                                    <option value="">Tất cả loại thông báo</option>
+                                    <option value="order_status">Trạng thái đơn hàng</option>
+                                    <option value="promotion">Khuyến mãi</option>
+                                    <option value="reminder">Nhắc nhở</option>
+                                    <option value="payment">Thanh toán</option>
+                                    <option value="required_payment_cash">Yêu cầu thanh toán</option>
+                                    <option value="session">Phiên làm việc</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <select id="filter-read" class="form-select form-select-sm">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="read">Đã đọc</option>
+                                    <option value="unread">Chưa đọc</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="search-input" class="form-control" placeholder="Tìm kiếm thông báo...">
+                                    <button class="btn btn-outline-secondary" type="button" id="search-btn">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <button id="reset-filters" class="btn btn-outline-secondary btn-sm w-100">
+                                    <i class="fas fa-sync-alt me-1"></i> Đặt lại
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover" id='table_data'>
+                            <thead>
+                                <tr>
+                                    <th width="40">
+                                       #
+                                    </th>
+                                    <th width="40">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="select-all">
+                                        </div>
+                                    </th>
+                                    <th>Loại</th>
+                                    <th>Nội dung</th>
+                                    <th>Thời gian</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="notifications-table-body">
+                                {% for notif in notifications %}
+                                <tr class="{% if not notif.is_read %}table-light{% endif %}" data-id="{{ notif.id }}">
+                                    <td>
+                                        {{loop.index}}
+                                    </td>
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input notification-checkbox" type="checkbox" value="{{ notif.id }}">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if notif.type == 'order_status' %}
+                                            <div class="avatar avatar-sm bg-primary-light rounded-circle">
+                                                <i class="fas fa-utensils text-primary"></i>
+                                            </div>
+                                        {% elif notif.type == 'promotion' %}
+                                            <div class="avatar avatar-sm bg-success-light rounded-circle">
+                                                <i class="fas fa-gift text-success"></i>
+                                            </div>
+                                        {% elif notif.type == 'reminder' %}
+                                            <div class="avatar avatar-sm bg-warning-light rounded-circle">
+                                                <i class="fas fa-bell text-warning"></i>
+                                            </div>
+                                        {% elif notif.type == 'payment' %}
+                                            <div class="avatar avatar-sm bg-info-light rounded-circle">
+                                                <i class="fas fa-money-bill-wave text-info"></i>
+                                            </div>
+                                        {% elif notif.type == 'required_payment_cash' %}
+                                            <div class="avatar avatar-sm bg-danger-light rounded-circle">
+                                                <i class="fas fa-hand-holding-usd text-danger"></i>
+                                            </div>
+                                        {% elif notif.type == 'session' %}
+                                            <div class="avatar avatar-sm bg-secondary-light rounded-circle">
+                                                <i class="fas fa-door-closed text-secondary"></i>
+                                            </div>
+                                        {% else %}
+                                            <div class="avatar avatar-sm bg-secondary-light rounded-circle">
+                                                <i class="fas fa-info-circle text-secondary"></i>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="notification-message">{{ notif.message|safe }}</td>
+                                    <td>{{ notif.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>
+                                        {% if notif.is_read %}
+                                            <span class="badge bg-success">Đã đọc</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Chưa đọc</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex">
+                                            {% if not notif.is_read %}
+                                            <button class="btn btn-primary btn-xs me-1 mark-read-btn" data-id="{{ notif.id }}" title="Đánh dấu đã đọc">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            {% endif %}
+                                            <button class="btn btn-info btn-xs me-1 view-btn" data-id="{{ notif.id }}" title="Xem chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-xs delete-btn" data-id="{{ notif.id }}" title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                               
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xem Chi Tiết Thông Báo -->
+<div class="modal fade" id="notificationDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết thông báo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="notification-detail">
+                    <div class="notification-icon text-center mb-3">
+                        <div id="modal-notification-icon" class="avatar avatar-md bg-primary-light rounded-circle d-inline-flex">
+                            <i class="fas fa-info-circle text-primary"></i>
+                        </div>
+                    </div>
+                    <div id="modal-notification-message" class="notification-message mb-3">
+                        <!-- Nội dung thông báo sẽ được điền vào đây -->
+                    </div>
+                    <div class="notification-meta">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted">Loại thông báo:</small>
+                                <p id="modal-notification-type">-</p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Thời gian:</small>
+                                <p id="modal-notification-time">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="modal-mark-read-btn">Đánh dấu đã đọc</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác Nhận Xóa -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa thông báo này không?</p>
+                <input type="hidden" id="delete-notification-id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .avatar.avatar-md {
+        width: 48px;
+        height: 48px;
+        font-size: 1.2rem;
+    }
+    
+    .notification-message {
+        max-width: 500px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .btn-xs {
+        padding: 0.1rem 0.4rem;
+        font-size: 0.75rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 30px;
+        color: #6c757d;
+    }
+    
+    /* Hiệu ứng khi hover vào hàng */
+    tbody tr:hover {
+        cursor: pointer;
+        background-color: rgba(13, 110, 253, 0.05) !important;
+    }
+    
+    /* Hiệu ứng khi thông báo mới */
+    .new-notification {
+        animation: newNotification 2s ease;
+    }
+    
+    @keyframes newNotification {
+        0% { background-color: rgba(13, 110, 253, 0.2); }
+        100% { background-color: inherit; }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .notification-message {
+            max-width: 200px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        var table = $('#table_data').DataTable({
+            ...DATATABLE_CONFIG
+        })
+        // Xử lý chọn tất cả
+        const selectAllCheckbox = document.getElementById('select-all');
+        const notificationCheckboxes = document.querySelectorAll('.notification-checkbox');
+        const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+        
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            notificationCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            updateDeleteButtonState();
+        });
+        
+        // Cập nhật trạng thái nút xóa đã chọn
+        function updateDeleteButtonState() {
+            const checkedCount = document.querySelectorAll('.notification-checkbox:checked').length;
+            deleteSelectedBtn.disabled = checkedCount === 0;
+        }
+        
+        // Xử lý khi checkbox thay đổi
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('notification-checkbox')) {
+                updateDeleteButtonState();
+                
+                // Kiểm tra nếu tất cả đều được chọn
+                const allChecked = document.querySelectorAll('.notification-checkbox:checked').length === notificationCheckboxes.length;
+                selectAllCheckbox.checked = allChecked;
+            }
+        });
+        
+        // Xử lý nút đánh dấu đã đọc
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.mark-read-btn')) {
+                const btn = e.target.closest('.mark-read-btn');
+                const notificationId = btn.dataset.id;
+                markNotificationAsRead(notificationId);
+                e.stopPropagation(); // Ngăn sự kiện lan ra ngoài
+            }
+        });
+        
+        // Xử lý nút xem chi tiết
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.view-btn')) {
+                const btn = e.target.closest('.view-btn');
+                const notificationId = btn.dataset.id;
+                showNotificationDetail(notificationId);
+                e.stopPropagation(); // Ngăn sự kiện lan ra ngoài
+            }
+        });
+        
+        // Xử lý nút xóa
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-btn')) {
+                const btn = e.target.closest('.delete-btn');
+                const notificationId = btn.dataset.id;
+                showDeleteConfirmation(notificationId);
+                e.stopPropagation(); // Ngăn sự kiện lan ra ngoài
+            }
+        });
+        
+        // Xử lý click vào hàng thông báo
+        document.addEventListener('click', function(e) {
+            const row = e.target.closest('tr[data-id]');
+            if (row && !e.target.closest('button') && !e.target.closest('.form-check')) {
+                const notificationId = row.dataset.id;
+                showNotificationDetail(notificationId);
+                
+                // Nếu thông báo chưa đọc, đánh dấu đã đọc
+                if (row.classList.contains('table-light')) {
+                    markNotificationAsRead(notificationId);
+                }
+            }
+        });
+        
+        // Xử lý nút đánh dấu tất cả đã đọc
+        document.getElementById('mark-all-read-btn').addEventListener('click', function() {
+            markAllNotificationsAsRead();
+        });
+        
+        // Xử lý nút xóa đã chọn
+        document.getElementById('delete-selected-btn').addEventListener('click', function() {
+            const selectedIds = Array.from(document.querySelectorAll('.notification-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+            
+            if (selectedIds.length > 0) {
+                if (confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} thông báo đã chọn không?`)) {
+                    deleteNotifications(selectedIds);
+                }
+            }
+        });
+        
+        // Xử lý nút xác nhận xóa trong modal
+        document.getElementById('confirm-delete-btn').addEventListener('click', function() {
+            const notificationId = document.getElementById('delete-notification-id').value;
+            if (notificationId) {
+                deleteNotifications([notificationId]);
+                const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
+                deleteModal.hide();
+            }
+        });
+        
+        // Xử lý nút đánh dấu đã đọc trong modal chi tiết
+        document.getElementById('modal-mark-read-btn').addEventListener('click', function() {
+            const notificationId = this.dataset.id;
+            if (notificationId) {
+                markNotificationAsRead(notificationId);
+                this.disabled = true;
+                this.textContent = 'Đã đánh dấu đọc';
+            }
+        });
+        
+        // Xử lý lọc thông báo
+        document.getElementById('filter-type').addEventListener('change', applyFilters);
+        document.getElementById('filter-read').addEventListener('change', applyFilters);
+        document.getElementById('search-btn').addEventListener('click', applyFilters);
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+        
+        // Xử lý nút đặt lại bộ lọc
+        document.getElementById('reset-filters').addEventListener('click', function() {
+            document.getElementById('filter-type').value = '';
+            document.getElementById('filter-read').value = '';
+            document.getElementById('search-input').value = '';
+            window.location.href = window.location.pathname;
+        });
+        
+        // Hàm áp dụng bộ lọc
+        function applyFilters() {
+            const type = document.getElementById('filter-type').value;
+            const readStatus = document.getElementById('filter-read').value;
+            const searchQuery = document.getElementById('search-input').value.trim();
+            
+            let url = window.location.pathname + '?';
+            let params = [];
+            
+            if (type) params.push(`type=${type}`);
+            if (readStatus) params.push(`read=${readStatus}`);
+            if (searchQuery) params.push(`search=${encodeURIComponent(searchQuery)}`);
+            
+            window.location.href = url + params.join('&');
+        }
+        
+        // Hàm hiển thị chi tiết thông báo
+        function showNotificationDetail(notificationId) {
+            // Lấy CSRF token từ cookie
+            const csrftoken = getCookie('csrftoken');
+            
+            fetch(`/get-notification-detail/${notificationId}/`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const notification = data.notification;
+                    
+                    // Cập nhật nội dung modal
+                    document.getElementById('modal-notification-message').innerHTML = notification.message;
+                    document.getElementById('modal-notification-type').textContent = getNotificationTypeName(notification.type);
+                    document.getElementById('modal-notification-time').textContent = notification.created_at;
+                    
+                    // Cập nhật icon
+                    updateModalIcon(notification.type);
+                    
+                    // Cập nhật nút đánh dấu đã đọc
+                    const markReadBtn = document.getElementById('modal-mark-read-btn');
+                    markReadBtn.dataset.id = notification.id;
+                    
+                    if (notification.is_read) {
+                        markReadBtn.disabled = true;
+                        markReadBtn.textContent = 'Đã đánh dấu đọc';
+                    } else {
+                        markReadBtn.disabled = false;
+                        markReadBtn.textContent = 'Đánh dấu đã đọc';
+                    }
+                    
+                    // Hiển thị modal
+                    const modal = new bootstrap.Modal(document.getElementById('notificationDetailModal'));
+                    modal.show();
+                } else {
+                    toastr.error(data.message || 'Không thể tải thông tin thông báo');
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi khi tải chi tiết thông báo:', error);
+                toastr.error('Đã xảy ra lỗi khi tải thông tin thông báo');
+            });
+        }
+        
+        // Hàm cập nhật icon trong modal
+        function updateModalIcon(type) {
+            const iconContainer = document.getElementById('modal-notification-icon');
+            let iconClass = 'fas fa-info-circle';
+            let bgClass = 'bg-secondary-light';
+            let textClass = 'text-secondary';
+            
+            switch (type) {
+                case 'order_status':
+                    iconClass = 'fas fa-utensils';
+                    bgClass = 'bg-primary-light';
+                    textClass = 'text-primary';
+                    break;
+                case 'promotion':
+                    iconClass = 'fas fa-gift';
+                    bgClass = 'bg-success-light';
+                    textClass = 'text-success';
+                    break;
+                case 'reminder':
+                    iconClass = 'fas fa-bell';
+                    bgClass = 'bg-warning-light';
+                    textClass = 'text-warning';
+                    break;
+                case 'payment':
+                    iconClass = 'fas fa-money-bill-wave';
+                    bgClass = 'bg-info-light';
+                    textClass = 'text-info';
+                    break;
+                case 'required_payment_cash':
+                    iconClass = 'fas fa-hand-holding-usd';
+                    bgClass = 'bg-danger-light';
+                    textClass = 'text-danger';
+                    break;
+                case 'session':
+                    iconClass = 'fas fa-door-closed';
+                    bgClass = 'bg-secondary-light';
+                    textClass = 'text-secondary';
+                    break;
+            }
+            
+            // Xóa tất cả các class hiện tại
+            iconContainer.className = 'avatar avatar-md rounded-circle d-inline-flex';
+            iconContainer.classList.add(bgClass);
+            
+            // Cập nhật icon
+            iconContainer.innerHTML = `<i class="${iconClass} ${textClass}"></i>`;
+        }
+        
+        // Hàm lấy tên loại thông báo
+        function getNotificationTypeName(type) {
+            switch (type) {
+                case 'order_status': return 'Trạng thái đơn hàng';
+                case 'promotion': return 'Khuyến mãi';
+                case 'reminder': return 'Nhắc nhở';
+                case 'payment': return 'Thanh toán';
+                case 'required_payment_cash': return 'Yêu cầu thanh toán';
+                case 'session': return 'Phiên làm việc';
+                default: return 'Khác';
+            }
+        }
+        
+        // Hàm hiển thị xác nhận xóa
+        function showDeleteConfirmation(notificationId) {
+            document.getElementById('delete-notification-id').value = notificationId;
+            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            modal.show();
+        }
+        
+        // Hàm đánh dấu thông báo đã đọc
+        function markNotificationAsRead(notificationId) {
+            // Lấy CSRF token từ cookie
+            const csrftoken = getCookie('csrftoken');
+            
+            fetch('/mark-notification-read/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    notification_id: notificationId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Cập nhật UI
+                    const row = document.querySelector(`tr[data-id="${notificationId}"]`);
+                    if (row) {
+                        row.classList.remove('table-light');
+                        const statusCell = row.querySelector('td:nth-child(5)');
+                        if (statusCell) {
+                            statusCell.innerHTML = '<span class="badge bg-success">Đã đọc</span>';
+                        }
+                        
+                        // Ẩn nút đánh dấu đã đọc
+                        const markReadBtn = row.querySelector('.mark-read-btn');
+                        if (markReadBtn) {
+                            markReadBtn.remove();
+                        }
+                    }
+                    
+                    toastr.success('Đã đánh dấu thông báo đã đọc');
+                } else {
+                    toastr.error(data.message || 'Không thể đánh dấu thông báo đã đọc');
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi khi đánh dấu thông báo đã đọc:', error);
+                toastr.error('Đã xảy ra lỗi khi đánh dấu thông báo đã đọc');
+            });
+        }
+        
+        // Hàm đánh dấu tất cả thông báo đã đọc
+        function markAllNotificationsAsRead() {
+            // Lấy CSRF token từ cookie
+            const csrftoken = getCookie('csrftoken');
+            
+            fetch('/mark-notification-read/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    mark_all: true
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Cập nhật UI - đánh dấu tất cả thông báo đã đọc
+                    const unreadRows = document.querySelectorAll('tr.table-light');
+                    unreadRows.forEach(row => {
+                        row.classList.remove('table-light');
+                        const statusCell = row.querySelector('td:nth-child(5)');
+                        if (statusCell) {
+                            statusCell.innerHTML = '<span class="badge bg-success">Đã đọc</span>';
+                        }
+                        
+                        // Ẩn nút đánh dấu đã đọc
+                        const markReadBtn = row.querySelector('.mark-read-btn');
+                        if (markReadBtn) {
+                            markReadBtn.remove();
+                        }
+                    });
+                    
+                    toastr.success('Đã đánh dấu tất cả thông báo đã đọc');
+                } else {
+                    toastr.error(data.message || 'Không thể đánh dấu tất cả thông báo đã đọc');
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi khi đánh dấu tất cả thông báo đã đọc:', error);
+                toastr.error('Đã xảy ra lỗi khi đánh dấu tất cả thông báo đã đọc');
+            });
+        }
+        
+        // Hàm xóa thông báo
+        function deleteNotifications(notificationIds) {
+            // Lấy CSRF token từ cookie
+            const csrftoken = getCookie('csrftoken');
+            
+            fetch('/delete-notifications/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    notification_ids: notificationIds
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Xóa các hàng khỏi bảng
+                    notificationIds.forEach(id => {
+                        const row = document.querySelector(`tr[data-id="${id}"]`);
+                        if (row) {
+                            row.remove();
+                        }
+                    });
+                    
+                    // Kiểm tra nếu bảng trống
+                    const tableBody = document.getElementById('notifications-table-body');
+                    if (tableBody.children.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="empty-state">
+                                        <i class="fas fa-bell-slash fa-3x mb-3 text-muted"></i>
+                                        <h5>Không có thông báo nào</h5>
+                                        <p class="text-muted">Bạn sẽ nhận được thông báo khi có hoạt động mới</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    
+                    // Cập nhật trạng thái nút xóa đã chọn
+                    selectAllCheckbox.checked = false;
+                    updateDeleteButtonState();
+                    
+                    toastr.success(`Đã xóa ${notificationIds.length} thông báo`);
+                } else {
+                    toastr.error(data.message || 'Không thể xóa thông báo');
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi khi xóa thông báo:', error);
+                toastr.error('Đã xảy ra lỗi khi xóa thông báo');
+            });
+        }
+        
+        // Hàm lấy CSRF token từ cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

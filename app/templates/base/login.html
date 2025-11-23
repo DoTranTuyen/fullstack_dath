@@ -1,0 +1,65 @@
+{% extends '/base/login_base.html'%}
+{%block body%}
+
+<div class="authincation">
+    <div class="container h-100">
+        <div class="row justify-content-center h-100 align-items-center">
+            <div class="col-md-6">
+                <div class="authincation-content">
+                    <div class="row no-gutters">
+                        <div class="col-xl-12">
+                            <div class="auth-form">
+                                <div class="text-center mb-3">
+                                    <a href="index.html"><img src="/static/images/logo.png" alt="/"></a>
+                                </div>
+                                <h4 class="text-center mb-4">Đăng nhập</h4>
+
+                                <form method="post"  action="{{url('web_01:login')}}">
+                                    <input name='csrfmiddlewaretoken' value='{{csrf_token}}' hidden/>
+                                    
+                                    <div class="form-group mb-3">
+                                        <label class="form-label">Tài khoản</label>
+                                        <input type="text" name="username" class="form-control" placeholder="admin" required>
+                                        {% if form.username.errors %}
+                                            <div class="text-danger">{{ form.username.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <label class="form-label">Mật khẩu</label>
+                                        <div class="position-relative">
+                                            <input type="password" name="password" class="form-control" placeholder="Password" required>
+                                            <span class="show-pass eye">
+                                                <i class="fa fa-eye-slash"></i>
+                                                <i class="fa fa-eye"></i>
+                                            </span>
+                                            {% if form.password.errors %}
+                                                <div class="text-danger">{{ form.password.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-wrap justify-content-between mt-4 mb-3 align-items-center d-none">
+                                        <div class="form-group me-3 py-1">
+                                            <div class="form-check custom-checkbox mb-0">
+                                                <input type="checkbox" class="form-check-input" id="customCheckBox1">
+                                                <label class="form-check-label" for="customCheckBox1">Ghi nhớ tôi</label>
+                                            </div>
+                                        </div>
+                                        <div class="form-group py-1">
+                                            <a class="" href="page-forgot-password.html">Quên mật khẩu?</a>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <button type="submit" class="btn btn-primary btn-block">Đăng nhập</button>
+                                    </div>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{%endblock%}

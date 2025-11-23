@@ -1,0 +1,104 @@
+{% import "/apps/web_01/commom/macros.html" as macros %}
+<div class="row mb-3">
+    <div class="col-md-5">
+        <span class='d-block'><strong><i class="fas fa-chair me-1"></i>Bàn:</strong> 5</span>
+    </div>
+    <div class="col-md-7 text-end">
+        <span><strong><i class="far fa-clock me-1"></i>Ngày:</strong> 01/04/2025 18:45</s>
+    </div>
+</div>
+<div class="row mb-3">
+    <div class="col-md-12">
+        <span class='d-block'><strong><i class="fas fa-user me-1"></i>Khách hàng:</strong> 5</span>
+    </div>
+</div>
+
+
+
+<hr class='mt-0'>
+
+<div class="row mb-2">
+    <div class="col-md-6">
+        <p><strong>Tổng tiền hàng:</strong></p>
+    </div>
+    <div class="col-md-6 text-right">
+        <p>200,000đ</p>
+    </div>
+</div>
+
+<div class="row mb-2">
+    <div class="col-md-6">
+        <p><strong>Giảm giá:</strong></p>
+    </div>
+    <div class="col-md-6 text-right">
+        <p>0đ</p>
+    </div>
+</div>
+
+<div class="row mb-2">
+    <div class="col-md-6">
+        <p><strong>Khách cần trả:</strong></p>
+    </div>
+    <div class="col-md-6 text-right">
+        <p><strong>640,000đ</strong></p>
+    </div>
+</div>
+
+<div class="row mb-2">
+    <div class="col-md-6">
+        <p><strong>Khách thanh toán:</strong></p>
+    </div>
+    <div class="col-md-6 text-right">
+        <p><strong class="text-success">10,000đ</strong></p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <p><strong>Tiền trả lại:</strong></p>
+    </div>
+    <div class="col-md-6 text-right">
+        <p><strong class="text-success">10,000đ</strong></p>
+    </div>
+</div>
+
+<div class="form-group">
+    <label><strong>Hình thức thanh toán:</strong></label>
+    <div class="payment-methods d-flex flex-wrap " style='gap:10px;'>
+        <button class="btn btn-outline-info active btn-sm" id="btn-cash">
+            <i class="fas fa-money-bill-wave"></i> Tiền mặt
+        </button>
+        <button class="btn btn-outline-info btn-sm" id="btn-card">
+            <i class="fas fa-credit-card"></i> Thẻ
+        </button>
+        <button class="btn btn-outline-info btn-sm" id="btn-bank">
+            <i class="fas fa-university"></i> Chuyển khoản
+        </button>
+      <!--  <button class="btn btn-outline-info w-25" id="btn-combined">
+            <i class="fas fa-random"></i> Kết hợp
+        </button>
+    -->
+    </div>
+</div>
+
+<hr class='mb-0'>
+
+<div class="text-end mt-3">
+    <button class="btn btn-success btn-sm ">
+        <i class="fas fa-check-circle me-1"></i> Xác nhận Thanh Toán
+    </button>
+</div>
+
+{%block script%}
+<script type="text/javascript">
+    $(".payment-methods .btn").click(function () {
+        $(".payment-methods .btn").removeClass("active");
+        $(this).addClass("active");
+    });
+
+
+  
+
+
+</script>
+{%endblock%}

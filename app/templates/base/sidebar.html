@@ -1,0 +1,96 @@
+<div class="deznav">
+	<div class="deznav-scroll dz-scroll">
+		<ul class="metismenu" id="menu">
+			{% if is_superuser %}
+				<li>
+					<a class="ai-icon" href="{{url('web_01:dashboard')}}">
+						<i class="fa-solid fa-chart-line"></i>
+						<span class="nav-text">Dashboard</span>
+					</a>
+				</li>
+			{% endif %}
+
+			{% if is_manager %}
+				<li>
+					<a class="ai-icon" href="{{url('web_01:chef_dashboard')}}">
+						<i class="fa-solid fa-utensils"></i>
+						<span class="nav-text">Phòng Bếp</span>
+					</a>
+				</li>
+			{% endif %}
+
+			<li>
+				<a class="ai-icon" href="{{url('web_01:service_list')}}" aria-expanded="false">
+    				<i class="fa-solid fa-clipboard-list"></i>
+    				<span class="nav-text">Sử dụng dịch vụ</span>
+				</a>
+			</li>
+			<li>
+				<a class="ai-icon" href="{{url('web_01:table_list')}}" aria-expanded="false">
+					<i class="fa-solid fa-table-cells"></i> 
+					<span class="nav-text">Bàn</span>
+				</a>
+			</li>
+			<li>
+				<a class="ai-icon" href="{{url('web_01:order_list')}}" aria-expanded="false">
+					<i class="fa-solid fa-list-alt"></i>
+					<span class="nav-text">Đơn hàng</span>
+				</a>
+			</li>
+
+			<li>
+				<a class="has-arrow ai-icon" href="javascript:void(0);" aria-expanded="false">
+					<i class="fa-solid fa-boxes-stacked"></i>
+					<span class="nav-text">Kho hàng</span>
+				</a>
+				<ul aria-expanded="false" class="mm-collapse">
+					<li>
+						<a class="ai-icon" href="{{url('web_01:product_list')}}" aria-expanded="false">
+							<i class="fa-solid fa-box-open"></i>
+							<span class="">Sản phẩm</span>
+						</a>
+					</li>
+					<li>
+						<a class="ai-icon" href="{{url('web_01:inventory_list')}}" aria-expanded="false">
+							<i class="fa-solid fa-basket-shopping"></i>
+							<span class="">Nguyên liệu</span>
+						</a>
+					</li>
+				</ul>
+			</li>
+			
+
+			<li>
+				<a class="ai-icon" href="{{url('web_01:customer_list')}}" aria-expanded="false">
+					<i class="fa-solid fa-users"></i>
+					<span class="nav-text">Khách hàng</span>
+				</a>
+			</li>
+
+			{% if is_manager %}
+			<li>
+				<a class="ai-icon" href="{{url('web_01:employee_list')}}" aria-expanded="false">
+					<i class="fa-solid fa-users-gear"></i>
+					<span class="nav-text">Nhân viên</span>
+				</a>
+			</li>
+			{%endif%}
+			
+			<!-- Thêm mục quản lý ca làm việc -->
+			<li>
+				<a class="ai-icon" href="{{url('web_01:work_shift_management')}}" aria-expanded="false">
+					<i class="fa-solid fa-calendar-days"></i>
+					<span class="nav-text">Quản lý ca làm việc</span>
+				</a>
+			</li>
+
+			<li>
+				<a class="ai-icon" href="{{url('web_01:table_reservation_list')}}" aria-expanded="false">
+					<i class="fa-solid fa-calendar-check fa-lg"></i>
+					<span class="nav-text">Đặt bàn</span>
+				</a>
+			</li>
+			
+		</ul>
+	</div>
+</div>

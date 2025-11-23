@@ -1,0 +1,45 @@
+.wrap-logo {
+    display    : flex;
+    align-items: flex-end;
+}
+
+/* left */
+.border-rs {
+    position       : relative;
+    width          : 44px;
+    height         : 44px;
+    display        : flex;
+    align-items    : center;
+    justify-content: center;
+}
+
+.icon-outside {
+    display        : flex;
+    align-items    : center;
+    justify-content: center;
+    border-radius  : 9999;
+    font-size      : 40px;
+    color          : white;
+    font-size      : 46px;
+}
+
+.icon-inside {
+    position : absolute;
+    top      : 50%;
+    left     : 50%;
+    transform: translate(-50%, calc(-50% + 5px));
+    font-size: 30px;
+    color    : var(--primary);
+}
+
+/* right */
+.text-logo{
+    display: flex;
+    align-items: flex-end;
+    line-height: 34px;
+    font-size: 34px;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 500;
+    margin-left: 3px;
+}

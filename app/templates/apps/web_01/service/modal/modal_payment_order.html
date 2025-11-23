@@ -1,0 +1,33 @@
+
+{%block script%}
+<script type="text/javascript"> 
+    var is_reloading = false;
+    $(document).ready(function() {
+        $('#{{modal_id}}').on('shown.bs.modal', function (e) {
+            var table_id = $(e.relatedTarget).data('table-id');
+            var is_payment = true;
+            $.ajax({
+                url: "{{ url('web_01:get_order_by_table') }}",
+                type: 'GET',
+                data: { table_id: table_id,is_payment:is_payment },
+                dataType: "html",
+                success: function (response) {
+                    $('#{{modal_id}} #modalBody').html(response);
+                    is_reloading = false;
+                },
+                error: function (xhr, status, e) {
+                   
+                }
+            });
+        });
+
+
+        $('#{{modal_id}}').on('hidden.bs.modal', function (e) {
+            if(is_reloading) {
+                location.reload();  
+            }
+        });
+
+    });
+</script>
+{%endblock%}

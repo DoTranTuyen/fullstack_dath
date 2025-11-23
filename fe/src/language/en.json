@@ -1,0 +1,81 @@
+{
+    "home": "Menu",
+    "order": "Order",
+    "logout": "Logout",
+    "language": "English",
+    "login": {
+        "welcome": "Welcome",
+        "sign_in": "Sign in to order",
+        "phone_number": "Phone number",
+        "name": "Name",
+        "errors": {
+            "phone_required": "Phone number is required!",
+            "phone_invalid": "Phone number must be 10 digits!",
+            "name_required": "Name is required!"
+        }
+    },
+    "search_placeholder": "What do you want to eat...",
+    "call_staff": {
+        "title": "Call Staff",
+        "message": "Would you like to call a staff member for assistance?",
+        "confirm": "Call Staff",
+        "cancel": "Cancel"
+    },
+    "menu": {
+        "title": "Restaurant Menu",
+        "subtitle": "Delicious moments",
+        "Tất cả": "All",
+        "Món khai vị": "Appetizers",
+        "Món Chính": "Main Course",
+        "Món Tráng miệng": "Desserts",
+        "Đồ uống": "Drinks",
+        "Combo đặc biệt": "Special Combo"
+    },
+    "order_summary": {
+        "title": "Cart",
+        "items": "{{count}} items",
+        "total_price": "{{price}} VND"
+    },
+    "order_page": {
+        "title": "Your Order",
+        "button": "Order",
+        "total": "Total",
+        "empty_cart": "Cart is empty",
+        "empty_cart_message": "Looks like you haven't added any items to your cart yet",
+        "continue_shopping": "Continue order",
+        "quantity": "Quantity"
+    },
+    "status_order": {
+        "title": "Your Orders",
+        "empty_title": "Forgot to order?",
+        "empty_message": "Order now to track your order status",
+        "add_more": "Add More",
+        "payment": "Payment",
+        "payment_method": "Choose Payment Method",
+        "cash_payment": "Cash Payment",
+        "bank_transfer": "Bank Transfer",
+        "cash_confirm_title": "Cash Payment Confirmation",
+        "cash_confirm_message": "Please prepare the amount: {{amount}} to pay when staff arrives",
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "close": "Close",
+        "qr_title": "Scan QR Code to Pay",
+        "qr_instruction": "Please scan the QR code using your banking app to make payment",
+        "rating_title": "Rate Your Order",
+        "feedback_placeholder": "Share your thoughts about the order...",
+        "submit_rating": "Submit Rating",
+        "rating_warning": "Please select a star rating",
+        "rating_success": "Thank you for your rating!",
+        "status": {
+            "pending": "Pending",
+            "confirmed": "In Progress",
+            "canceled": "Canceled",
+            "completed": "Completed"
+        }
+    },
+    "payment": {
+        "thank_you": "Thank you!",
+        "success_message": "Your order has been confirmed",
+        "return_to_menu": "Return to Menu"
+    }
+}

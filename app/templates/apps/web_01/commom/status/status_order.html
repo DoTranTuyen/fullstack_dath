@@ -1,0 +1,9 @@
+{% if status == "pending" %}
+        <span class="badge light badge-outline-warning">Chờ</span>
+{% elif status == "in_progress" %}
+        <span class="badge light badge-info">Đang làm</span>
+{% elif status == "completed" %}
+        <span class="badge light badge-outline-success">Đã xong</span>
+{% else %}
+        <span class="badge light badge-outline-danger">Hủy</span>
+{% endif %}

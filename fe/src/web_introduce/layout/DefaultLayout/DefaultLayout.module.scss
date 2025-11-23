@@ -1,0 +1,72 @@
+:root {
+    --foreignKey    : #ffbe33;
+    --white         : #fff;
+    --black         : #000;
+    // ---------- footer ----------
+    --gl-footer-dark: #222831;
+    // ---------- color ----------
+    --cl-dark       : #0c0c0c;
+    --cl-white      : #fff;
+    // ---------- background ----------
+    --gl-bg-dark    : #0c0c0c;
+    --gl-bg-white   : #fff;
+    // ---------- height ----------
+    --height-header : 88px;
+}
+
+.cs-container {
+    &::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: #aaa;
+        border-radius   : 10px;
+    }
+}
+
+// ---------- cursor ----------
+.cs-cursor-text {
+    cursor: text !important;
+}
+
+.cs-cursor-pointer {
+    cursor: pointer !important;
+}
+
+// ---------- font size ----------
+.cs-size-12 {
+    font-size: 12px !important;
+}
+
+.cs-size-13 {
+    font-size: 13px !important;
+}
+
+.cs-size-14 {
+    font-size: 14px !important;
+}
+
+.cs-size-15 {
+    font-size: 15px !important;
+}
+
+.cs-size-16 {
+    font-size: 16px !important;
+}
+
+.cs-size-17 {
+    font-size: 17px !important;
+}
+
+.cs-size-18 {
+    font-size: 18px !important;
+}
+
+.cs-size-19 {
+    font-size: 19px !important;
+}
+
+.cs-size-20 {
+    font-size: 20px !important;
+}

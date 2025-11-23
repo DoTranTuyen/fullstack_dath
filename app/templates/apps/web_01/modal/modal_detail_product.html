@@ -1,0 +1,44 @@
+
+{%block script%}
+<script type="text/javascript"> 
+    var is_reloading = false;
+    $(document).ready(function() {
+        // jquery has 
+        
+        $('#{{modal_id}}').on('shown.bs.modal', function (e) {
+            var product_id = $(e.relatedTarget).data('id');
+            var product_name = $(e.relatedTarget).data('name');
+            // set title modal by product_name
+            disable_element($('#{{modal_id}} #modalBody'));
+            $('#{{modal_id}} .modal-title').text(product_name);
+            var url =  "{{ url('web_01:detail_product',args=(0,))}}".replace('/0', `/${product_id}`);
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "html",
+                success: function (response) {
+                    $('#{{modal_id}} #modalBody').html(response);
+                    is_reloading = false;
+                    enable_element($('#{{modal_id}} #modalBody'));
+                },
+                error: function (xhr, status, e) {
+                
+                }
+            });
+        });
+
+
+        $('#{{modal_id}}').on('hidden.bs.modal', function (e) {
+            if(is_reloading) {
+                location.reload();  
+            }else {
+                $('#{{modal_id}} #modalBody').html('');
+            }
+        });
+
+
+    });
+
+    
+</script>
+{%endblock%}

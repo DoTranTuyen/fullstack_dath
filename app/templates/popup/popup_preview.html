@@ -1,0 +1,40 @@
+<div class="modal fade" id={{modal_id}} role="dialog" aria-labelledby={{modal_id}} aria-hidden="true"
+  data-backdrop="static">
+  <div class="modal-dialog {{ modal_class_size if modal_class_size else 'modal-md' }} " role="document">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h4 class="modal-title">{{modal_title}}</h4>
+              <button type="button" class="btn-close" data-bs-dismiss="modal">
+              </button>
+          </div>
+   
+          <div  class="modal-body p-3">
+            <div id="message"></div>
+            <div id="modalBody" >
+            </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+
+{%block script%}
+<script type="text/javascript">
+  var modal_submit = false;
+
+  $('#{{modal_id}}').on('shown.bs.modal', function (e) {
+  });
+
+  $('#{{modal_id}} .modal-button-submit').click(function () {
+    modal_submit = true;
+  });
+
+  $('#{{modal_id}}').on('hidden.bs.modal', function (e) {
+    $('#{{modal_id}} #modalBody').children().html("") 
+    if (modal_submit == true) {
+      disable_element($(".table-loading"))
+      location.reload(); //Auto refresh
+    }
+  });
+</script>
+{%endblock%}

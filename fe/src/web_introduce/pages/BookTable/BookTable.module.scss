@@ -1,0 +1,80 @@
+.cs-booking-form {
+    margin: 40px 0;
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    
+    @media (max-width: 768px) {
+      padding: 1.5rem;
+    }
+  }
+  
+  .cs-form-title {
+    font-family: 'Dancing Script';
+    font-size: 2.5rem;
+    color: #333;
+    position: relative;
+    padding-bottom: 1rem;
+    text-align: center;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background: #ffbe33;
+    }
+    
+    @media (max-width: 768px) {
+      font-size: 2rem;
+    }
+  }
+  
+  .cs-form-input {
+    height: 45px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s;
+    
+    &:focus {
+      border-color: #ffbe33;
+      box-shadow: 0 0 0 0.25rem rgba(255, 190, 51, 0.25);
+    }
+    
+    &::placeholder {
+      color: #999;
+    }
+  }
+  
+  .cs-submit-btn {
+    display: inline-block;
+    padding: 15px 45px;
+    background-color: #ffbe33;
+    color: #ffffff;
+    border-radius: 45px;
+    transition: all 0.3s;
+    border: none;
+    margin-top: 15px;
+    font-size: 16px;
+
+    &:hover {
+        background-color: #e69c00;
+    }
+  }
+  
+  .cs-note-text {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  
+  .cs-form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }

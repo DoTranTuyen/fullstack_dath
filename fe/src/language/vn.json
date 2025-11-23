@@ -1,0 +1,82 @@
+{
+    "home": "Thực đơn",
+    "order": "Đơn hàng",
+    "logout": "Đăng xuất",
+    "language": "Tiếng Việt",
+    "login": {
+        "welcome": "Chào mừng",
+        "sign_in": "Đăng nhập gọi món",
+        "phone_number": "Số điện thoại",
+        "name": "Tên",
+        "errors": {
+            "phone_required": "Số điện thoại không được để trống!",
+            "phone_invalid": "Số điện thoại phải có 10 chữ số!",
+            "name_required": "Tên không được để trống!"
+        }
+    },
+    "search_placeholder": "Bạn muốn ăn gì...",
+    "call_staff": {
+        "title": "Gọi nhân viên",
+        "message": "Bạn có muốn gọi nhân viên để được hỗ trợ không?",
+        "confirm": "Xác nhận",
+        "cancel": "Hủy"
+    },
+    "menu": {
+        "title": "Thực đơn quán",
+        "subtitle": "Vị ngon, trọn khoảnh khắc",
+        "Tất cả": "Tất cả",
+        "Món khai vị": "Món khai vị",
+        "Món Chính": "Món chính",
+        "Món Tráng miệng": "Món tráng miệng",
+        "Đồ uống": "Đồ uống",
+        "Combo đặc biệt": "Combo đặt biệt"
+    },
+    "order_summary": {
+        "title": "Giỏ hàng",
+        "items": "{{count}} món",
+        "total_price": "{{price}} đ"
+    },
+    "order_page": {
+        "title": "Đơn hàng",
+        "button": "Đặt món",
+        "total": "Tổng tiền",
+        "empty_cart": "Giỏ hàng trống",
+        "empty_cart_message": "Có vẻ như bạn chưa thêm món nào vào giỏ hàng",
+        "continue_shopping": "Gọi món",
+        "quantity": "Số lượng"
+    },
+    "status_order": {
+        "title": "Đơn hàng đã đặt",
+        "empty_title": "Quên chưa đặt món rồi nè bạn ơi?",
+        "empty_message": "Hãy đặt món để theo dõi trạng thái đơn hàng của bạn",
+        "add_more": "Gọi thêm món",
+        "payment": "Thanh toán",
+        "payment_method": "Chọn phương thức thanh toán",
+        "cash_payment": "Yêu cầu thanh toán tiền mặt",
+        "momo_payment": "Thanh toán Momo",
+        "bank_transfer": "Chuyển khoản ngân hàng",
+        "cash_confirm_title": "Xác nhận yêu cầu thanh toán tiền mặt",
+        "cash_confirm_message": "Vui lòng chuẩn bị số tiền: {{amount}} để thanh toán khi nhân viên đến",
+        "confirm": "Gửi yêu cầu",
+        "cancel": "Hủy",
+        "close": "Đóng",
+        "rating_title": "Đánh giá đơn hàng",
+        "feedback_placeholder": "Hãy chia sẻ cảm nhận của bạn về đơn hàng...",
+        "submit_rating": "Gửi đánh giá",
+        "rating_warning": "Vui lòng chọn số sao đánh giá",
+        "rating_success": "Cảm ơn bạn đã đánh giá!",
+        "qr_title": "Quét mã QR để thanh toán",
+        "qr_instruction": "Vui lòng quét mã QR bằng ứng dụng ngân hàng để thanh toán",
+        "status": {
+            "pending": "Chờ",
+            "confirmed": "Đang làm",
+            "canceled": "Hủy",
+            "completed": "Hoàn thành"
+        }
+    },
+    "payment": {
+        "thank_you": "Cảm ơn quý khách!",
+        "success_message": "Đơn hàng của bạn đã được xác nhận",
+        "return_to_menu": "Quay lại menu"
+    }
+}

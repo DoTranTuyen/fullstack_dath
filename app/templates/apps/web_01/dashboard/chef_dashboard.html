@@ -1,0 +1,588 @@
+{% extends 'base/base.html' %}
+
+{% block body %}
+<div class="container-fluid">
+    <!-- Tiêu đề trang -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Quản lý Bếp</h1>
+        <div>
+            <button id="refresh-btn" class="btn btn-info ml-2 btn-sm">
+                <i class="fas fa-sync-alt fa-sm"></i> Làm mới
+            </button>
+        </div>
+    </div>
+
+    <!-- Thông báo nguyên liệu sắp hết -->
+    {% if low_stock_ingredients %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>Cảnh báo!</strong> Một số nguyên liệu sắp hết:
+        {% for ingredient in low_stock_ingredients %}
+            <span class="badge badge-pill badge-outline-danger">{{ ingredient.name }}: {{ ingredient.quantity_in_stock }} {{ ingredient.unit }}</span>
+        {% endfor %}
+        {% if low_stock_ingredients|length %}
+            <span class="badge badge-pill badge-outline-danger">+{{ low_stock_ingredients|length }} nguyên liệu khác</span>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Thống kê nhanh -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Đơn chờ xử lý</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_orders|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Đang thực hiện</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ in_progress_orders|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-fire fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Hoàn thành hôm nay</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ completed_orders|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Tổng số món</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ pending_orders|length + in_progress_orders|length + completed_orders|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-utensils fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách đơn hàng -->
+    <div class="row">
+        <!-- Đơn hàng đang chờ -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold">Đơn hàng chờ xử lý</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                            aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Tùy chọn:</div>
+                            <a class="dropdown-item" href="#" id="start-all-orders">Bắt đầu tất cả</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" id="sort-by-time">Sắp xếp theo thời gian</a>
+                            <a class="dropdown-item" href="#" id="sort-by-table">Sắp xếp theo bàn</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="order-list pending-orders">
+                        {% if pending_orders %}
+                            {% for order_detail in pending_orders %}
+                                <div class="order-item" data-id="{{ order_detail.id }}" data-order="{{ order_detail.order.id }}" data-table="{{ order_detail.order.invoice.session.table.table_number }}">
+                                    <div class="order-header d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge badge-primary">Bàn {{ order_detail.order.invoice.session.table.table_number }}</span>
+                                            <span class="badge badge-outline-secondary">{{ order_detail.created_at.strftime('%d/%m/%Y %H:%m') }}</span>
+                                        </div>
+                                        <div class="order-actions">
+                                            <button class="btn btn-sm btn-warning start-cooking" data-id="{{ order_detail.id }}">
+                                                <i class="fas fa-fire"></i> Bắt đầu
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="order-content">
+                                        <h6 class="font-weight-bold">{{ order_detail.product.name }}</h6>
+                                        <p class="mb-0">
+                                            <span class="text-muted">Số lượng:</span> 
+                                            <span class="font-weight-bold">{{ order_detail.quantity }}</span>
+                                        </p>
+                                        {% if order_detail.note %}
+                                            <p class="mb-0 text-danger">
+                                                <i class="fas fa-exclamation-circle"></i> {{ order_detail.note }}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="order-footer text-muted">
+                                        <small>Đơn hàng #{{ order_detail.order.id }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-check-circle fa-3x text-gray-300 mb-3"></i>
+                                <p class="mb-0">Không có đơn hàng nào đang chờ xử lý</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Đơn hàng đang thực hiện -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold">Đang thực hiện</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                            aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Tùy chọn:</div>
+                            <a class="dropdown-item" href="#" id="complete-all-orders">Hoàn thành tất cả</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" id="sort-by-time-progress">Sắp xếp theo thời gian</a>
+                            <a class="dropdown-item" href="#" id="sort-by-table-progress">Sắp xếp theo bàn</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="order-list in-progress-orders">
+                        {% if in_progress_orders %}
+                            {% for order_detail in in_progress_orders %}
+                                <div class="order-item" data-id="{{ order_detail.id }}" data-order="{{ order_detail.order.id }}" data-table="{{ order_detail.order.invoice.session.table.table_number }}">
+                                    <div class="order-header d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge badge-primary">Bàn {{ order_detail.order.invoice.session.table.table_number }}</span>
+                                            <span class="badge badge-outline-secondary">{{ order_detail.created_at.strftime('%d/%m/%Y %H:%m') }}</span>
+                                            <span class="badge badge-outline-warning cooking-time" data-start="{{ order_detail.updated_at.timestamp() | int }}">00:00</span>
+                                        </div>
+                                        <div class="order-actions">
+                                            <button class="btn btn-sm btn-success complete-order" data-id="{{ order_detail.id }}">
+                                                <i class="fas fa-check"></i> Hoàn thành
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="order-content">
+                                        <h6 class="font-weight-bold">{{ order_detail.product.name }}</h6>
+                                        <p class="mb-0">
+                                            <span class="text-muted">Số lượng:</span> 
+                                            <span class="font-weight-bold">{{ order_detail.quantity }}</span>
+                                        </p>
+                                        {% if order_detail.note %}
+                                            <p class="mb-0 text-danger">
+                                                <i class="fas fa-exclamation-circle"></i> {{ order_detail.note }}
+                                            </p>
+                                        {% endif %}
+                                        <div class="progress mt-2" style="height: 5px;">
+                                            <div class="progress-bar bg-warning progress-cooking" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="order-footer text-muted">
+                                        <small>Đơn hàng #{{ order_detail.order.id }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-fire-alt fa-3x text-gray-300 mb-3"></i>
+                                <p class="mb-0">Không có món ăn nào đang được chế biến</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hàng thứ 2 -->
+    <div class="row">
+        <!-- Đơn hàng đã hoàn thành -->
+        <div class="col-lg-12 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold">Đã hoàn thành hôm nay</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Món ăn</th>
+                                    <th>Bàn</th>
+                                    <th>Số lượng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order_detail in completed_orders %}
+                                <tr>
+                                    <td>{{ order_detail.product.name }}</td>
+                                    <td>{{ order_detail.order.invoice.session.table.table_number }}</td>
+                                    <td>{{ order_detail.quantity }}</td>
+                                   
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Thông báo -->
+<div class="position-fixed bottom-0 right-0 p-3" style="z-index: 5; right: 0; bottom: 0;">
+    <div id="notification-toast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true" data-delay="5000">
+        <div class="toast-header">
+            <i class="fas fa-bell mr-2 text-primary"></i>
+            <strong class="mr-auto" id="toast-title">Thông báo</strong>
+            <small id="toast-time">Vừa xong</small>
+            <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="toast-body" id="toast-message">
+            Có đơn hàng mới cần xử lý!
+        </div>
+    </div>
+</div>
+
+<!-- Âm thanh thông báo -->
+<audio id="notification-sound" src="/static/sounds/notification.mp3" preload="auto"></audio>
+
+<style>
+    .order-list {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .order-item {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #4e73df;
+        transition: all 0.3s ease;
+    }
+    
+    .order-item:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+    
+    .order-header {
+        margin-bottom: 10px;
+    }
+    
+    .order-content {
+        margin-bottom: 10px;
+    }
+    
+    .order-footer {
+        font-size: 0.8rem;
+        border-top: 1px solid #eee;
+        padding-top: 8px;
+    }
+    
+    .cooking-time {
+        min-width: 60px;
+        text-align: center;
+    }
+    
+    .popular-dish-item:last-child hr {
+        display: none;
+    }
+    
+    /* Hiệu ứng khi hoàn thành món ăn */
+    .order-item.completed {
+        animation: fadeOut 0.5s forwards;
+    }
+    
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+    }
+    
+    /* Hiệu ứng khi có đơn mới */
+    .order-item.new {
+        animation: highlight 2s;
+    }
+    
+    @keyframes highlight {
+        0% {
+            background-color: #fff9c4;
+        }
+        100% {
+            background-color: #fff;
+        }
+    }
+</style>
+
+{% block script %}
+<script>
+    $(document).ready(function() {
+        // Khởi tạo các biến
+        const pendingOrdersList = $('.pending-orders');
+        const inProgressOrdersList = $('.in-progress-orders');
+        const notificationSound = document.getElementById('notification-sound');
+        
+        // Cập nhật thời gian nấu
+        function updateCookingTimes() {
+            $('.cooking-time').each(function() {
+                const startTime = parseInt($(this).data('start')); // timestamp in seconds
+                const now = Math.floor(Date.now() / 1000); // current time in seconds
+                const elapsedSeconds = now - startTime;
+        
+                if (elapsedSeconds > 0) {
+                    const minutes = Math.floor(elapsedSeconds / 60);
+                    const seconds = elapsedSeconds % 60;
+                    const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    $(this).text(formattedTime);
+        
+                    // Update progress bar (assuming 15-minute average cooking time)
+                    const progressBar = $(this).closest('.order-item').find('.progress-cooking');
+                    const progressPercent = Math.min((elapsedSeconds / (15 * 60)) * 100, 100);
+                    progressBar.css('width', progressPercent + '%');
+        
+                    // Change color if cooking time exceeds 15 minutes
+                    if (elapsedSeconds > 15 * 60) {
+                        $(this).removeClass('badge-outline-warning').addClass('badge-outline-danger');
+                        progressBar.removeClass('bg-warning').addClass('bg-danger');
+                    }
+                }
+            });
+        }
+        
+        
+        
+        // Cập nhật thời gian mỗi giây
+        setInterval(updateCookingTimes, 1000);
+        
+        // Hiển thị thông báo
+        function showNotification(title, message) {
+            $('#toast-title').text(title);
+            $('#toast-message').text(message);
+            $('#toast-time').text('Vừa xong');
+            $('#notification-toast').toast('show');
+            notificationSound.play();
+        }
+        
+        // Bắt đầu nấu món ăn
+        $(document).on('click', '.start-cooking', function() {
+            const orderDetailId = $(this).data('id');
+            const orderItem = $(this).closest('.order-item');
+            const tableId = $(this).data('table');
+            $.ajax({
+                url: "{{url('web_01:chef_update_order_status')}}",
+                type: 'POST',
+                data: JSON.stringify({
+                    order_detail_id: orderDetailId,
+                    status: 'in_progress'
+                }),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Thêm thời gian bắt đầu nấu
+                        const now = Math.floor(Date.now() / 1000);
+                        
+                        // Thêm thanh tiến trình và badge thời gian
+                        const progressHtml = `
+                            <div class="progress mt-2" style="height: 5px;">
+                                <div class="progress-bar bg-warning progress-cooking" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        `;
+                        
+                        // Thay đổi nút
+                        const buttonHtml = `
+                            <button class="btn btn-sm btn-success complete-order" data-id="${orderDetailId}">
+                                <i class="fas fa-check"></i> Hoàn thành
+                            </button>
+                        `;
+                        
+                        // Thêm badge thời gian
+                        orderItem.find('.order-header div:first').append(`
+                            <span class="badge badge-outline-warning cooking-time" data-start="${now}">00:00</span>
+                        `);
+                        
+                        // Cập nhật giao diện
+                        orderItem.find('.order-content').append(progressHtml);
+                        orderItem.find('.order-actions').html(buttonHtml);
+                        
+                        // Di chuyển món ăn sang danh sách đang nấu
+                        orderItem.appendTo(inProgressOrdersList);
+                        
+                        socket_update_order_status_detail("product_status",'',tableId,'in_progress')
+                    }
+                },
+                error: function(error) {
+                    console.error('Error:', error);
+                    alert('Đã xảy ra lỗi khi cập nhật trạng thái');
+                }
+            });
+        });
+        
+        // Hoàn thành món ăn
+        $(document).on('click', '.complete-order', function() {
+            const orderDetailId = $(this).data('id');
+            const tableId = $(this).data('table');
+            const orderItem = $(this).closest('.order-item');
+            $.ajax({
+                url: "{{url('web_01:chef_update_order_status')}}",
+                type: 'POST',
+                data: JSON.stringify({
+                    order_detail_id: orderDetailId,
+                    status: 'completed'
+                }),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Thêm hiệu ứng hoàn thành
+                        orderItem.addClass('completed');
+                        
+                        // Sau khi hiệu ứng kết thúc, xóa món ăn khỏi danh sách
+                        setTimeout(function() {
+                            orderItem.remove();
+                            
+                            // Làm mới trang sau khi hoàn thành để cập nhật danh sách đã hoàn thành
+                            // Có thể thay thế bằng AJAX để cập nhật chỉ phần cần thiết
+                            location.reload();
+                        }, 500);
+                        
+                        socket_update_order_status_detail("product_status",'',tableId,'completed')
+                    }
+                },
+                error: function(error) {
+                    console.error('Error:', error);
+                    alert('Đã xảy ra lỗi khi cập nhật trạng thái');
+                }
+            });
+        });
+        
+        // Làm mới trang
+        $('#refresh-btn').click(function() {
+            location.reload();
+        });
+        
+        // Bắt đầu tất cả các món
+        $('#start-all-orders').click(function() {
+            if (confirm('Bạn có chắc muốn bắt đầu tất cả các món ăn?')) {
+                $('.start-cooking').each(function() {
+                    $(this).click();
+                });
+            }
+        });
+        
+        // Hoàn thành tất cả các món
+        $('#complete-all-orders').click(function() {
+            if (confirm('Bạn có chắc muốn hoàn thành tất cả các món ăn?')) {
+                $('.complete-order').each(function() {
+                    $(this).click();
+                });
+            }
+        });
+        
+        // Sắp xếp theo thời gian
+        $('#sort-by-time, #sort-by-time-progress').click(function() {
+            const orderList = $(this).closest('.card').find('.order-list');
+            const orderItems = orderList.children('.order-item').get();
+            
+            orderItems.sort(function(a, b) {
+                const timeA = $(a).find('.badge-outline-secondary').text();
+                const timeB = $(b).find('.badge-outline-secondary').text();
+                return timeA.localeCompare(timeB);
+            });
+            
+            $.each(orderItems, function(index, item) {
+                orderList.append(item);
+            });
+        });
+        
+        // Sắp xếp theo bàn
+        $('#sort-by-table, #sort-by-table-progress').click(function() {
+            const orderList = $(this).closest('.card').find('.order-list');
+            const orderItems = orderList.children('.order-item').get();
+            
+            orderItems.sort(function(a, b) {
+                const tableA = parseInt($(a).data('table'));
+                const tableB = parseInt($(b).data('table'));
+                return tableA - tableB;
+            });
+            
+            $.each(orderItems, function(index, item) {
+                orderList.append(item);
+            });
+        });
+        
+        // Kiểm tra đơn hàng mới mỗi 30 giây
+        function checkNewOrders() {
+            $.get('/chef/check-new-orders/', function(response) {
+                if (response.status === 'success' && response.new_orders.length > 0) {
+                    // Hiển thị thông báo
+                    showNotification('Đơn hàng mới', `Có ${response.new_orders.length} đơn hàng mới cần xử lý`);
+                    
+                    // Làm mới trang để hiển thị đơn hàng mới
+                    location.reload();
+                }
+            });
+        }
+        
+        // Kiểm tra đơn hàng mới mỗi 30 giây
+        setInterval(checkNewOrders, 30000);
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,14 @@
+{% import "/apps/web_01/commom/macros.html" as macros %}
+
+{% for product in product_list %}
+<div class="menu-item p-2 border rounded mb-2" draggable="true" data-item-id="{{ product.id }}">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid me-2 rounded"
+                style="width: 50px; height: 50px; object-fit: cover;">
+            <span>{{ product.name }}</span>
+        </div>
+        <strong class="text-secondary me-2">{{ macros.format_currency(product.price) }}</strong>
+    </div>
+</div>
+{% endfor %}

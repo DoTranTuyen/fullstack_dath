@@ -1,0 +1,25 @@
+.home {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+// Tablet
+@media screen and (max-width: 1024px) {
+  .home {
+    padding: 0 20px;
+  }
+}
+
+// Mobile
+@media screen and (max-width: 768px) {
+  .home {
+    padding: 0 15px;
+  }
+}
+
+// Small Mobile
+@media screen and (max-width: 480px) {
+  .home {
+    padding: 0 10px;
+  }
+}

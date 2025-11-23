@@ -1,0 +1,24 @@
+
+{% import "/apps/web_01/commom/macros.html" as macros %}
+<table class="table header-border table-hover verticle-middle mb-0">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Món ăn</th>
+            <th>Số lượng</th>
+            <th>Giá</th>
+            <th>Tổng</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for detail in order_details %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ detail.product.name }}</td>
+            <td>{{ detail.quantity }}</td>
+            <td>{{ macros.format_currency(detail.price) }}</td>
+            <td>{{ macros.format_currency(detail.total) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

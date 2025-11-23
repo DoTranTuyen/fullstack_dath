@@ -1,0 +1,32 @@
+{% block script %}
+<script type="text/javascript"> 
+    var is_reloading = false;
+
+    $(document).ready(function () {
+        $('#{{ modal_id }}').on('show.bs.modal', function (e) {
+            const button = $(e.relatedTarget); // Lấy nút bấm mở modal
+            const reservationId = button.data('id');
+            const url = `/management/table-reservation/${reservationId}/`;
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "html",
+                success: function (response) {
+                    $('#{{ modal_id }} #modalBody').html(response);
+                    is_reloading = false;
+                },
+                error: function (xhr, status, e) {
+                    console.error("Không thể load form cập nhật:", e);
+                }
+            });
+        });
+
+        $('#{{ modal_id }}').on('hidden.bs.modal', function (e) {
+            if (is_reloading) {
+                location.reload();  
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,163 @@
+<div class="row">
+    <div class="col-12">
+        <form id="importIngredientForm">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="importTable">
+                    <thead>
+                        <tr>
+                            <th>Nguyên liệu</th>
+                            <th>Số lượng</th>
+                            <th>Ghi chú</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <select name="ingredient[]" class="form-control form-control-sm select2" required>
+                                    <option value="">-- Chọn nguyên liệu --</option>
+                                    {% for ingredient in ingredients %}
+                                    <option value="{{ ingredient.id }}">{{ ingredient.name }} ({{ ingredient.get_unit_display() }})</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" name="change[]" class="form-control form-control-sm" min="1" value="1" required>
+                            </td>
+                            <td>
+                                <input type="text" name="note[]" class="form-control form-control-sm" placeholder="Ghi chú">
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm btn-remove-row" disabled>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="text-end mb-3">
+                <button type="button" class="btn btn-sm btn-primary" id="addImportRow">
+                    <i class="fas fa-plus"></i> Thêm dòng
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> Lưu nhập kho
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Đóng
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Khởi tạo select2
+        $('.select2').select2({
+            dropdownParent: $('#importIngredientModal')
+        });
+        
+        // Thêm dòng mới
+        $('#addImportRow').click(function() {
+            const newRow = `
+                <tr>
+                    <td>
+                        <select name="ingredient[]" class="form-control form-control-sm select2-new" required>
+                            <option value="">-- Chọn nguyên liệu --</option>
+                            {% for ingredient in ingredients %}
+                            <option value="{{ ingredient.id }}">{{ ingredient.name }} ({{ ingredient.get_unit_display() }})</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" name="change[]" class="form-control form-control-sm" min="1" value="1" required>
+                    </td>
+                    <td>
+                        <input type="text" name="note[]" class="form-control form-control-sm" placeholder="Ghi chú">
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm btn-remove-row">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            
+            $('#importTable tbody').append(newRow);
+            
+            // Khởi tạo select2 cho dòng mới
+            $('.select2-new').select2({
+                dropdownParent: $('#importIngredientModal')
+            }).removeClass('select2-new');
+            
+            // Kích hoạt nút xóa cho tất cả các dòng nếu có nhiều hơn 1 dòng
+            if ($('#importTable tbody tr').length > 1) {
+                $('.btn-remove-row').prop('disabled', false);
+            }
+        });
+        
+        // Xóa dòng
+        $(document).on('click', '.btn-remove-row', function() {
+            $(this).closest('tr').remove();
+            
+            // Vô hiệu hóa nút xóa nếu chỉ còn 1 dòng
+            if ($('#importTable tbody tr').length <= 1) {
+                $('.btn-remove-row').prop('disabled', true);
+            }
+        });
+        
+        // Xử lý submit form
+        $('#importIngredientForm').submit(function(e) {
+            e.preventDefault();
+            
+            // Kiểm tra trùng nguyên liệu
+            const ingredients = [];
+            let hasDuplicate = false;
+            
+            $('select[name="ingredient[]"]').each(function() {
+                const val = $(this).val();
+                if (val && ingredients.includes(val)) {
+                    hasDuplicate = true;
+                    return false;
+                }
+                if (val) {
+                    ingredients.push(val);
+                }
+            });
+            
+            if (hasDuplicate) {
+                alert('Không được nhập trùng nguyên liệu!');
+                return;
+            }
+            
+            // Gửi form
+            $.ajax({
+                url: "{{ url('web_01:import_ingredient') }}",
+                type: "POST",
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                data: $(this).serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        $('#importIngredientModal').modal('hide');
+                        // Reload DataTable
+                        $('#table_data').DataTable().ajax.reload();
+                        // Hiển thị thông báo thành công
+                        toastr.success('Nhập kho thành công!');
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        toastr.error(xhr.responseJSON.error);
+                    } else {
+                        toastr.error('Đã xảy ra lỗi khi nhập kho!');
+                    }
+                }
+            });
+        });
+    });
+</script>

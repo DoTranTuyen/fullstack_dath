@@ -1,0 +1,82 @@
+<!-- Template cho popup tạo bàn mới -->
+<div class="modal-header">
+    <h5 class="modal-title">Thêm bàn mới</h5>
+    <span  class="close close-qr-manual" data-dismiss="modal" aria-label="Close">
+        <i class="fa-regular fa-circle-xmark"></i>
+    </button>
+</div>
+<div class="modal-body">
+    <form id="create-table-form">
+        <input hidden name='csrfmiddlewaretoken' value='{{ csrf_token }}'/>
+        <div class="form-group">
+            <label for="table_number">Số bàn <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="table_number" name="table_number" required min="1">
+        </div>
+        <div class="form-group">
+            <label for="capacity">Sức chứa</label>
+            <input type="number" class="form-control" id="capacity" name="capacity" value="4" min="1">
+            <small class="form-text text-muted">Số người tối đa có thể ngồi tại bàn này</small>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary close-qr-manual" data-dismiss="modal">Hủy</button>
+    <button type="button" class="btn btn-primary" id="save-table-btn">
+        <i class="fas fa-save fa-sm"></i> Lưu
+    </button>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Xử lý khi nhấn nút Lưu
+        $('#save-table-btn').click(function() {
+            event.preventDefault();  // <- Thêm dòng này
+            // Kiểm tra form hợp lệ
+            if (!$('#create-table-form')[0].checkValidity()) {
+                $('#create-table-form')[0].reportValidity();
+                return;
+            }
+            
+            // Lấy dữ liệu từ form
+            var formData = {
+                'table_number': $('#table_number').val(),
+                'capacity': $('#capacity').val(),
+                'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+            };
+
+            disable_element($('.modal-body'));
+            
+            // Gửi AJAX request
+            $.ajax({
+                url: "{{url('web_01:manager_table_create')}}",
+                type: "POST",
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    // Hiển thị thông báo thành công
+                    toastr.success(response.message);
+                    
+                    // Đóng modal
+                    $('#qrModal').modal('hide');
+                    
+                    // Làm mới trang sau 1 giây
+                    setTimeout(function() {
+                        location.reload();
+                        enable_element($('.modal-body'));
+                    }, 1000);
+                },
+                error: function(xhr, status, error) {
+                    // Hiển thị thông báo lỗi
+                    var errorMessage = xhr.responseJSON ? xhr.responseJSON.message : "Đã xảy ra lỗi khi tạo bàn";
+                    toastr.error(errorMessage);
+                    enable_element($('.modal-body'));
+                }
+            });
+        });
+
+        $('.close-qr-manual').click(function () {
+            $('#qrModal').modal('hide');
+        });
+
+    });
+</script>

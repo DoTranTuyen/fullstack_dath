@@ -1,0 +1,492 @@
+{% extends '/base/base.html' %}
+{% import "/apps/web_01/commom/macros.html" as macros %}
+{% block body %}
+<div class="col-lg-12">
+    
+    <!-- Card table list-->
+    <div id='data-table-list'>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title">Quản lý nhân viên</h4>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddEmployee">
+                    <i class="fa-solid fa-user-plus me-1"></i> Thêm nhân viên
+                </button>
+                
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md">
+                            <label><strong>Tên Nhân viên</strong></label>
+                            <select class="form-control form-control-sm" id="filter-name">
+                                <option value="">-- Tất cả --</option>
+                                {% for employee in employee_list %}
+                                    <option value="{{ employee.user.username }}">{{ employee.user.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md">
+                            <label><strong>Chức vụ</strong></label>
+                            <select class="form-control form-control-sm" id="filter-role">
+                                <option value="">-- Tất cả chức vụ --</option>
+                                <option value="admin">Quản trị viên</option>
+                                <option value="manager">Quản lý</option>
+                                <option value="staff">Nhân viên</option>
+                                <option value="chef">Đầu bếp</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-info btn-sm" id="btn-filter">
+                        <i class="fa fa-filter"></i> Lọc
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btn-reset">
+                        <i class="fa fa-times"></i> Xóa lọc
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-responsive-md" id='table_data'>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nhân viên</th>
+                                <th>Chức vụ</th>
+                                <th>Lương cơ bản</th>
+                                <th>Tổng ca làm</th>
+                                <th>Tổng giờ làm</th>
+                                <th>Lương thực tế</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Add Employee -->
+<div class="modal fade" id="modalAddEmployee" tabindex="-1" aria-labelledby="modalAddEmployeeLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAddEmployeeLabel">Thêm nhân viên mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addEmployeeForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Tên nhân viên</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Chức vụ</label>
+                        <select class="form-control" id="role" name="role" required>
+                            <option value="admin">Quản trị viên</option>
+                            <option value="manager">Quản lý</option>
+                            <option value="staff" selected>Nhân viên</option>
+                            <option value="chef">Đầu bếp</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="salary" class="form-label">Lương cơ bản (VND)</label>
+                        <input type="text" class="form-control" id="salary" name="salary" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnAddEmployee">Thêm nhân viên</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit Employee -->
+<div class="modal fade" id="modalEditEmployee" tabindex="-1" aria-labelledby="modalEditEmployeeLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditEmployeeLabel">Chỉnh sửa nhân viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editEmployeeForm">
+                    <input type="hidden" id="editEmployeeId" name="employee_id">
+                    <div class="mb-3">
+                        <label for="editUsername" class="form-label">Tên nhân viên</label>
+                        <input type="text" class="form-control" id="editUsername" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editRole" class="form-label">Chức vụ</label>
+                        <select class="form-control" id="editRole" name="role" required>
+                            <option value="admin">Quản trị viên</option>
+                            <option value="manager">Quản lý</option>
+                            <option value="staff">Nhân viên</option>
+                            <option value="chef">Đầu bếp</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editSalary" class="form-label">Lương cơ bản (VND)</label>
+                        <input type="text" class="form-control" id="editSalary" name="salary" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTotalShifts" class="form-label">Tổng ca làm</label>
+                        <input type="text" class="form-control fw-bold text-dark" id="editTotalShifts" name="total_shifts" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTotalHours" class="form-label">Tổng giờ làm</label>
+                        <input type="text" class="form-control fw-bold text-dark" id="editTotalHours" name="total_hours" readonly>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnUpdateEmployee">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Delete Confirmation -->
+<div class="modal fade" id="modalDeleteEmployee" tabindex="-1" aria-labelledby="modalDeleteEmployeeLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDeleteEmployeeLabel">Xác nhận xóa nhân viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa nhân viên <span id="deleteEmployeeName" class="fw-bold"></span>?</p>
+                <p class="text-danger">Hành động này không thể hoàn tác.</p>
+                <input type="hidden" id="deleteEmployeeId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="btnDeleteEmployee">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Định nghĩa mapping cho các role
+        const roleMapping = {
+            'admin': 'Quản trị viên',
+            'manager': 'Quản lý',
+            'staff': 'Nhân viên',
+            'chef': 'Đầu bếp'
+        };
+
+        // Initialize DataTable
+        var table = $('#table_data').DataTable({
+            ...DATATABLE_CONFIG,
+            processing: true,
+            serverSide: true,
+            autoWidth: false,
+            responsive: true,
+            ajax: {
+                url: "{{ url('web_01:employee_list') }}",
+                type: "POST",
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                data: function(d) {
+                    d.filter_name = $('#filter-name').val();  // giá trị từ dropdown
+                    d.filter_role = $('#filter-role').val();
+                    return d;
+                },
+                beforeSend: function () {
+                    disable_element($('#table_data'));
+                },
+                complete: function () {
+                    enable_element($('#table_data'));
+                },
+                error: function(xhr, status, error) {
+                    console.error("Lỗi tải dữ liệu nhân viên:", error);
+                },
+                
+
+            },
+            columns: [
+                { data: "index", title: "#" },
+
+                { 
+                    data: "username", title: "Nhân viên",
+                    render: function(data, type, row) {
+                        const username = row.username || "N/A";
+                        return `<i class="fa-solid fa-user-tie"></i> ${username}`;
+                    }
+                },
+
+                { 
+                    data: "role", 
+                    title: "Chức vụ",
+                    render: function(data) {
+                        // Chuyển đổi role sang tiếng Việt
+                        const vietnameseRole = roleMapping[data] || data;
+                        return `<span class="text-dark">${vietnameseRole}</span>`;
+                    }
+                },
+
+                { 
+                    data: "salary", title: "Lương cơ bản",
+                    render: function(data) {
+                        return `<span class="text-dark">${data}</span>`;
+                    }
+                },
+
+                { 
+                    data: "total_shifts", title: "Tổng ca làm",
+                    render: function(data) {
+                        return `<span class="text-dark">${data}</span>`;
+                    }
+                },
+
+                { 
+                    data: "total_hours", title: "Tổng giờ làm",
+                    render: function(data) {
+                        return `<span class="text-dark">${data}</span>`;
+                    }
+                },
+
+                { 
+                    data: "actual_salary", title: "Lương thực tế",
+                    render: function(data) {
+                        return `<span class="text-success">${data}</span>`;
+                    }
+                },
+
+                { 
+                    data: "created_at", title: "Ngày tạo",
+                    render: function(data) {
+                        return `<i class="fa fa-calendar"></i> ${data}`;
+                    }
+                },
+
+                { 
+                    data: "id", title: "Thao tác",
+                    render: function(data, type, row) {
+                        return `
+                            <div class="d-flex">
+                                <button type='button' class="btn btn-light btn-sm me-1 edit-employee"
+                                    data-id="${row.id}" 
+                                    data-username="${row.username}" 
+                                    data-role="${row.role}" 
+                                    data-salary="${row.salary.replace(' VND', '')}"
+                                    data-shifts="${row.total_shifts}"
+                                    data-hours="${row.total_hours}">
+                                    <i class="fa fa-pencil text-primary"></i>
+                                </button>
+                                <button type='button' class="btn btn-light btn-sm delete-employee" 
+                                    data-id="${row.id}" data-username="${row.username}">
+                                    <i class="fa fa-trash text-danger"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+                }
+            ]
+        });
+
+        $('#btn-filter').on('click', function() {
+            // Simply reload the table - the data function will include the current filter values
+            table.ajax.reload();
+            
+            // Show filter indicators if filters are applied
+            const filterName = $('#filter-name').val().trim();
+            const filterRole = $('#filter-role').val();
+            
+            if (filterName || filterRole) {
+                let filterText = "Đang lọc: ";
+                if (filterName) filterText += `Tên: "${filterName}" `;
+                if (filterRole) {
+                    // Get the display text for the selected role
+                    const roleText = $('#filter-role option:selected').text();
+                    filterText += `Chức vụ: "${roleText}" `;
+                }
+                
+            }
+        });
+    
+        // Reset filter button click handler - FIXED
+        $('#btn-reset').on('click', function() {
+            // Clear filter inputs
+            $('#filter-name').val('');
+            $('#filter-role').val('');
+            
+            // Reload the table - the data function will pick up the cleared values
+            table.ajax.reload();
+            
+        });
+
+        // Edit employee button click
+        $(document).on('click', '.edit-employee', function() {
+            const id = $(this).data('id');
+            const username = $(this).data('username');
+            const salary = $(this).data('salary');
+            const role = $(this).data('role');
+
+            const totalShifts = $(this).data('shifts') || 0;
+            const totalHours = $(this).data('hours') || '0 giờ';
+
+            $('#editEmployeeId').val(id);
+            $('#editUsername').val(username);
+            $('#editSalary').val(salary);
+            $('#editRole').val(role);
+
+            // Gán thêm tổng ca & giờ
+            $('#editTotalShifts').val(totalShifts);
+            $('#editTotalHours').val(totalHours);
+
+            $('#modalEditEmployee').modal('show');
+        });
+
+        // Delete employee button click
+        $(document).on('click', '.delete-employee', function() {
+            const id = $(this).data('id');
+            const username = $(this).data('username');
+            
+            $('#deleteEmployeeId').val(id);
+            $('#deleteEmployeeName').text(username);
+            
+            $('#modalDeleteEmployee').modal('show');
+        });
+
+        // Add employee form submit
+        $('#btnAddEmployee').on('click', function() {
+            const form = $('#addEmployeeForm');
+            
+            if (!form[0].checkValidity()) {
+                form[0].reportValidity();
+                return;
+            }
+            
+            const formData = {
+                username: $('#username').val(),
+                salary: $('#salary').val(),
+                role: $('#role').val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            };
+            
+            $.ajax({
+                url: "{{ url('web_01:employee_add') }}",
+                type: "POST",
+                data: formData,
+                beforeSend: function() {
+                    $('#btnAddEmployee').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalAddEmployee').modal('hide');
+                        form[0].reset();
+                        table.ajax.reload(); // reload mà không reset pagination
+                    } else {
+                        showToast('error', 'Lỗi', response.message || 'Không thể thêm nhân viên');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showToast('error', 'Lỗi', 'Không thể thêm nhân viên');
+                    console.error("Lỗi thêm nhân viên:", error);
+                },
+                complete: function() {
+                    $('#btnAddEmployee').prop('disabled', false).html('Thêm nhân viên');
+                }
+            });
+        });
+
+        // Update employee form submit
+        $('#btnUpdateEmployee').on('click', function() {
+            const form = $('#editEmployeeForm');
+            
+            if (!form[0].checkValidity()) {
+                form[0].reportValidity();
+                return;
+            }
+            
+            const formData = {
+                employee_id: $('#editEmployeeId').val(),
+                username: $('#editUsername').val(),
+                salary: $('#editSalary').val(),
+                role: $('#editRole').val(),
+                
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            };
+            
+            $.ajax({
+                url: "{{ url('web_01:employee_update') }}",
+                type: "POST",
+                data: formData,
+                beforeSend: function() {
+                    $('#btnUpdateEmployee').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalEditEmployee').modal('hide');
+                        table.ajax.reload();
+                    } else {
+                        showToast('error', 'Lỗi', response.message || 'Không thể cập nhật nhân viên');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showToast('error', 'Lỗi', 'Không thể cập nhật nhân viên');
+                    console.error("Lỗi cập nhật nhân viên:", error);
+                },
+                complete: function() {
+                    $('#btnUpdateEmployee').prop('disabled', false).html('Lưu thay đổi');
+                }
+            });
+        });
+
+        // Delete employee confirmation
+        $('#btnDeleteEmployee').on('click', function() {
+            const employeeId = $('#deleteEmployeeId').val();
+            
+            $.ajax({
+                url: "{{ url('web_01:employee_delete') }}",
+                type: "POST",
+                data: {
+                    employee_id: employeeId,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                beforeSend: function() {
+                    $('#btnDeleteEmployee').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalDeleteEmployee').modal('hide');
+                        table.ajax.reload();
+                    } else {
+                        showToast('error', 'Lỗi', response.message || 'Không thể xóa nhân viên');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showToast('error', 'Lỗi', 'Không thể xóa nhân viên');
+                    console.error("Lỗi xóa nhân viên:", error);
+                },
+                complete: function() {
+                    $('#btnDeleteEmployee').prop('disabled', false).html('Xóa');
+                }
+            });
+        });
+
+        // Helper function to show toast notifications
+        function showToast(type, title, message) {
+            // Check if your template has a toast function
+            if (typeof window.showToast === 'function') {
+                window.showToast(type, title, message);
+            } else {
+                // Fallback alert if no toast function exists
+                alert(`${title}: ${message}`);
+            }
+        }
+    });
+</script>
+{% endblock %}

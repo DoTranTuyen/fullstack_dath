@@ -1,0 +1,909 @@
+{% extends '/base/base.html' %}
+{% import "/apps/web_01/commom/macros.html" as macros %}
+{% block body %}
+<div class="col-lg-12">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Quản lý ca làm việc</h4>
+            <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="shifts-tab" data-bs-toggle="tab" data-bs-target="#shifts" type="button" role="tab" aria-controls="shifts" aria-selected="true">
+                        <i class="fa-solid fa-calendar-days me-1"></i> Ca làm việc
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="registrations-tab" data-bs-toggle="tab" data-bs-target="#registrations" type="button" role="tab" aria-controls="registrations" aria-selected="false">
+                        <i class="fa-solid fa-clipboard-list me-1"></i> Đăng ký ca
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="myTabContent">
+                <!-- Tab Ca làm việc -->
+                <div class="tab-pane fade show active" id="shifts" role="tabpanel" aria-labelledby="shifts-tab">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5>Danh sách ca làm việc</h5>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalRegisterShift">
+                            <i class="fa-solid fa-plus me-1"></i> Đăng ký ca làm việc
+                        </button>
+                    </div>
+                    
+                    <!-- Bộ lọc ca làm việc -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label><strong>Nhân viên</strong></label>
+                                    <select class="form-control form-control-sm" id="filter-employee-shift">
+                                        {% for employee in employees %}
+                                        <option value="{{ employee.user_id }}">{{ employee.user.username }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label><strong>Từ ngày</strong></label>
+                                    <input type="date" class="form-control form-control-sm" id="filter-date-from-shift">
+                                </div>
+                                <div class="col-md-2">
+                                    <label><strong>Đến ngày</strong></label>
+                                    <input type="date" class="form-control form-control-sm" id="filter-date-to-shift">
+                                </div>
+                                <div class="col-md-2">
+                                    <label><strong>Ca làm việc</strong></label>
+                                    <select class="form-control form-control-sm" id="filter-shift-type">
+                                        <option value="">-- Tất cả ca --</option>
+                                        {% for key, value in shift_types.items() %}
+                                        <option value="{{ key }}">{{ value }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label><strong>Trạng thái</strong></label>
+                                    <select class="form-control form-control-sm" id="filter-status-shift">
+                                        <option value="">-- Tất cả trạng thái --</option>
+                                        <option value="not_checked">Chưa chấm công</option>
+                                        <option value="checked_in">Đang làm việc</option>
+                                        <option value="checked_out">Đã hoàn thành</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-info btn-sm" id="btn-filter-shift">
+                                <i class="fa fa-filter"></i> Lọc
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-reset-shift">
+                                <i class="fa fa-times"></i> Xóa lọc
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Bảng ca làm việc -->
+                    <div class="table-responsive">
+                        <table class="table table-responsive-md" id="table_shifts">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nhân viên</th>
+                                    <th>Ngày</th>
+                                    <th>Ca</th>
+                                    <th>Giờ vào</th>
+                                    <th>Giờ ra</th>
+                                    <th>Thời gian làm</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ghi chú</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Tab Đăng ký ca -->
+                <div class="tab-pane fade" id="registrations" role="tabpanel" aria-labelledby="registrations-tab">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5>Danh sách đăng ký ca làm việc</h5>
+                        <div>
+                            <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#modalRegisterShift">
+                                <i class="fa-solid fa-plus me-1"></i> Đăng ký ca làm việc
+                            </button>
+                            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalRegisterOff">
+                                <i class="fa-solid fa-calendar-xmark me-1"></i> Đăng ký nghỉ
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Bộ lọc đăng ký ca -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label><strong>Nhân viên</strong></label>
+                                    <select class="form-control form-control-sm" id="filter-employee-reg">
+                                        {% for employee in employees %}
+                                        <option value="{{ employee.user_id }}">{{ employee.user.username }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label><strong>Từ ngày</strong></label>
+                                    <input type="date" class="form-control form-control-sm" id="filter-date-from-reg">
+                                </div>
+                                <div class="col-md-2">
+                                    <label><strong>Đến ngày</strong></label>
+                                    <input type="date" class="form-control form-control-sm" id="filter-date-to-reg">
+                                </div>
+                                <div class="col-md-2">
+                                    <label><strong>Loại đăng ký</strong></label>
+                                    <select class="form-control form-control-sm" id="filter-is-off">
+                                        <option value="">-- Tất cả loại --</option>
+                                        <option value="false">Đăng ký làm</option>
+                                        <option value="true">Đăng ký nghỉ</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label><strong>Trạng thái</strong></label>
+                                    <select class="form-control form-control-sm" id="filter-status-reg">
+                                        <option value="">-- Tất cả trạng thái --</option>
+                                        <option value="pending">Chờ duyệt</option>
+                                        <option value="approved">Đã duyệt</option>
+                                        <option value="rejected">Từ chối</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-info btn-sm" id="btn-filter-reg">
+                                <i class="fa fa-filter"></i> Lọc
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-reset-reg">
+                                <i class="fa fa-times"></i> Xóa lọc
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Bảng đăng ký ca -->
+                    <div class="table-responsive">
+                        <table class="table table-responsive-md" id="table_registrations">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nhân viên</th>
+                                    <th>Ngày</th>
+                                    <th>Ca</th>
+                                    <th>Loại đăng ký</th>
+                                    <th>Lý do</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                    {% if is_manager %}
+                                    <th>Thao tác</th>
+                                    {%endif%}
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Đăng ký ca làm việc -->
+<div class="modal fade" id="modalRegisterShift" tabindex="-1" aria-labelledby="modalRegisterShiftLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalRegisterShiftLabel">Đăng ký ca làm việc</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="registerShiftForm">
+                    <div class="mb-3">
+                        <label for="employee_id" class="form-label">Nhân viên</label>
+                        <select class="form-control" id="employee_id" name="employee_id" required>
+                            {% for employee in employees %}
+                            <option value="{{ employee.user_id }}">{{ employee.user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Ngày làm việc</label>
+                        <input type="date" class="form-control" id="date" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="shift_type" class="form-label">Ca làm việc</label>
+                        <select class="form-control" id="shift_type" name="shift_type" required>
+                            <option value="">-- Chọn ca làm việc --</option>
+                            {% for key, value in shift_types.items() %}
+                            <option value="{{ key }}">{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <input type="hidden" name="is_off" value="false">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnRegisterShift">Đăng ký</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Đăng ký nghỉ -->
+<div class="modal fade" id="modalRegisterOff" tabindex="-1" aria-labelledby="modalRegisterOffLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalRegisterOffLabel">Đăng ký nghỉ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="registerOffForm">
+                    <div class="mb-3">
+                        <label for="employee_id_off" class="form-label">Nhân viên</label>
+                        <select class="form-control" id="employee_id_off" name="employee_id" required>
+                            {% for employee in employees %}
+                            <option value="{{ employee.user_id }}">{{ employee.user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_off" class="form-label">Ngày nghỉ</label>
+                        <input type="date" class="form-control" id="date_off" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="shift_type_off" class="form-label">Ca nghỉ</label>
+                        <select class="form-control" id="shift_type_off" name="shift_type" required>
+                            <option value="">-- Chọn ca nghỉ --</option>
+                            {% for key, value in shift_types.items() %}
+                            <option value="{{ key }}">{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Lý do nghỉ</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                    </div>
+                    <input type="hidden" name="is_off" value="true">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnRegisterOff">Đăng ký</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Duyệt đăng ký -->
+<div class="modal fade" id="modalApproveRegistration" tabindex="-1" aria-labelledby="modalApproveRegistrationLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalApproveRegistrationLabel">Duyệt đăng ký</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Thông tin đăng ký:</p>
+                <ul>
+                    <li><strong>Nhân viên:</strong> <span id="approve_employee_name"></span></li>
+                    <li><strong>Ngày:</strong> <span id="approve_date"></span></li>
+                    <li><strong>Ca:</strong> <span id="approve_shift_type"></span></li>
+                    <li><strong>Loại đăng ký:</strong> <span id="approve_is_off"></span></li>
+                    <li><strong>Lý do (nếu có):</strong> <span id="approve_reason"></span></li>
+                </ul>
+                <p>Bạn có muốn duyệt đăng ký này không?</p>
+                <input type="hidden" id="approve_registration_id">
+            </div>
+            <div class="modal-footer">
+                {% if request.user.is_superuser or request.user.groups.filter(name__in=['Admin', 'Manager']).exists %}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger" id="btnRejectRegistration">Từ chối</button>
+                    <button type="button" class="btn btn-success" id="btnApproveRegistration">Duyệt</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chấm công -->
+<div class="modal fade" id="modalCheckInOut" tabindex="-1" aria-labelledby="modalCheckInOutLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCheckInOutLabel">Chấm công</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Thông tin ca làm việc:</p>
+                <ul>
+                    <li><strong>Nhân viên:</strong> <span id="check_employee_name"></span></li>
+                    <li><strong>Ngày:</strong> <span id="check_date"></span></li>
+                    <li><strong>Ca:</strong> <span id="check_shift_type"></span></li>
+                    <li><strong>Trạng thái:</strong> <span id="check_status"></span></li>
+                </ul>
+                <div id="check_in_section">
+                    <p>Bạn có muốn chấm công vào ca làm việc này không?</p>
+                </div>
+                <div id="check_out_section" style="display: none;">
+                    <p>Bạn có muốn chấm công ra ca làm việc này không?</p>
+                    <p><strong>Giờ vào:</strong> <span id="check_time_start"></span></p>
+                </div>
+                <input type="hidden" id="check_shift_id">
+                <input type="hidden" id="check_action" value="in">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="btnCheckInOut">Chấm công vào</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Định nghĩa mapping cho các loại ca
+        const shiftTypeMapping = {
+            {% for key, value in shift_types.items() %}
+            '{{ key }}': '{{ value }}',
+            {% endfor %}
+        };
+
+        // Định nghĩa mapping cho các trạng thái đăng ký
+        const registrationStatusMapping = {
+            'pending': 'Chờ duyệt',
+            'approved': 'Đã duyệt',
+            'rejected': 'Từ chối'
+        };
+
+        // Định nghĩa mapping cho các màu trạng thái
+        const statusColorMapping = {
+            'pending': 'text-warning',
+            'approved': 'text-success',
+            'rejected': 'text-danger'
+        };
+
+        // Khởi tạo DataTable cho ca làm việc
+        var tableShifts = $('#table_shifts').DataTable({
+            ...DATATABLE_CONFIG,
+            processing: true,
+            serverSide: true,
+            autoWidth: false,
+            responsive: true,
+            ajax: {
+                url: "{{ url('web_01:work_shift_list') }}",
+                type: "POST",
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                data: function(d) {
+                    d.filter_employee = $('#filter-employee-shift').val().trim();
+                    d.filter_date_from = $('#filter-date-from-shift').val();
+                    d.filter_date_to = $('#filter-date-to-shift').val();
+                    d.filter_shift_type = $('#filter-shift-type').val();
+                    d.filter_status = $('#filter-status-shift').val();
+                    return d;
+                },
+                beforeSend: function () {
+                    disable_element($('#table_shifts'));
+                },
+                complete: function () {
+                    enable_element($('#table_shifts'));
+                },
+                error: function(xhr, status, error) {
+                    console.error("Lỗi tải dữ liệu ca làm việc:", error);
+                }
+            },
+            columns: [
+                { data: "index", title: "#" },
+                { 
+                    data: "employee_name", title: "Nhân viên",
+                    render: function(data) {
+                        return `<i class="fa-solid fa-user-tie"></i> ${data}`;
+                    }
+                },
+                { 
+                    data: "date", title: "Ngày",
+                    render: function(data) {
+                        return `<i class="fa-solid fa-calendar-day"></i> ${data}`;
+                    }
+                },
+                { 
+                    data: "shift_type_display", title: "Ca",
+                    render: function(data, type, row) {
+                        let icon = '';
+                        if (row.shift_type === 'morning') {
+                            icon = '<i class="fa-solid fa-sun text-warning"></i>';
+                        } else if (row.shift_type === 'afternoon') {
+                            icon = '<i class="fa-solid fa-cloud-sun text-primary"></i>';
+                        } else if (row.shift_type === 'evening') {
+                            icon = '<i class="fa-solid fa-moon text-dark"></i>';
+                        }
+                        return `${icon} ${data}`;
+                    }
+                },
+                { 
+                    data: "time_start", title: "Giờ vào",
+                    render: function(data) {
+                        return data ? `<i class="fa-solid fa-clock"></i> ${data}` : '<span class="text-muted">Chưa chấm công</span>';
+                    }
+                },
+                { 
+                    data: "time_end", title: "Giờ ra",
+                    render: function(data) {
+                        return data ? `<i class="fa-solid fa-clock"></i> ${data}` : '<span class="text-muted">Chưa chấm công</span>';
+                    }
+                },
+                { 
+                    data: "working_hours", title: "Thời gian làm",
+                    render: function(data) {
+                        return data ? `<span class="text-success">${data}</span>` : '<span class="text-muted">-</span>';
+                    }
+                },
+                { 
+                    data: "status", title: "Trạng thái",
+                    render: function(data, type, row) {
+                        return `<span class="${row.status_class}">${data}</span>`;
+                    }
+                },
+                { 
+                    data: "notes", title: "Ghi chú",
+                    render: function(data) {
+                        return data ? data : '<span class="text-muted">-</span>';
+                    }
+                },
+                { 
+                    data: "id", title: "Thao tác",
+                    render: function(data, type, row) {
+                        let buttons = '';
+                        
+                        // Nếu chưa chấm công vào
+                        if (!row.time_start) {
+                            buttons += `
+                                <button type='button' class="btn btn-light btn-sm me-1 check-in"
+                                    data-id="${row.id}" 
+                                    data-employee="${row.employee_name}" 
+                                    data-date="${row.date}" 
+                                    data-shift="${row.shift_type_display}"
+                                    data-status="${row.status}">
+                                    <i class="fa-solid fa-sign-in-alt text-success"></i>
+                                </button>`;
+                        }
+                        // Nếu đã chấm công vào nhưng chưa chấm công ra
+                        else if (!row.time_end) {
+                            buttons += `
+                                <button type='button' class="btn btn-light btn-sm me-1 check-out"
+                                    data-id="${row.id}" 
+                                    data-employee="${row.employee_name}" 
+                                    data-date="${row.date}" 
+                                    data-shift="${row.shift_type_display}"
+                                    data-status="${row.status}"
+                                    data-time-start="${row.time_start}">
+                                    <i class="fa-solid fa-sign-out-alt text-danger"></i>
+                                </button>`;
+                        }
+                        
+                        return buttons || '<span class="text-muted">Đã hoàn thành</span>';
+                    }
+                }
+            ]
+        });
+
+        // Khởi tạo DataTable cho đăng ký ca
+        var tableRegistrations = $('#table_registrations').DataTable({
+            ...DATATABLE_CONFIG,
+            processing: true,
+            serverSide: true,
+            autoWidth: false,
+            responsive: true,
+            ajax: {
+                url: "{{ url('web_01:shift_registration_list') }}",
+                type: "POST",
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                data: function(d) {
+                    d.filter_employee = $('#filter-employee-reg').val().trim();
+                    d.filter_date_from = $('#filter-date-from-reg').val();
+                    d.filter_date_to = $('#filter-date-to-reg').val();
+                    d.filter_is_off = $('#filter-is-off').val();
+                    d.filter_status = $('#filter-status-reg').val();
+                    return d;
+                },
+                beforeSend: function () {
+                    disable_element($('#table_registrations'));
+                },
+                complete: function () {
+                    enable_element($('#table_registrations'));
+                },
+                error: function(xhr, status, error) {
+                    console.error("Lỗi tải dữ liệu đăng ký ca:", error);
+                }
+            },
+            columns: [
+                { data: "index", title: "#" },
+                { 
+                    data: "employee_name", title: "Nhân viên",
+                    render: function(data) {
+                        return `<i class="fa-solid fa-user-tie"></i> ${data}`;
+                    }
+                },
+                { 
+                    data: "date", title: "Ngày",
+                    render: function(data) {
+                        return `<i class="fa-solid fa-calendar-day"></i> ${data}`;
+                    }
+                },
+                { 
+                    data: "shift_type_display", title: "Ca",
+                    render: function(data, type, row) {
+                        let icon = '';
+                        if (row.shift_type === 'morning') {
+                            icon = '<i class="fa-solid fa-sun text-warning"></i>';
+                        } else if (row.shift_type === 'afternoon') {
+                            icon = '<i class="fa-solid fa-cloud-sun text-primary"></i>';
+                        } else if (row.shift_type === 'evening') {
+                            icon = '<i class="fa-solid fa-moon text-dark"></i>';
+                        }
+                        return `${icon} ${data}`;
+                    }
+                },
+                { 
+                    data: "is_off_display", title: "Loại đăng ký",
+                    render: function(data, type, row) {
+                        const icon = row.is_off ? 
+                            '<i class="fa-solid fa-calendar-xmark text-danger"></i>' : 
+                            '<i class="fa-solid fa-calendar-check text-success"></i>';
+                        return `${icon} ${data}`;
+                    }
+                },
+                { 
+                    data: "reason", title: "Lý do",
+                    render: function(data) {
+                        return data ? data : '<span class="text-muted">-</span>';
+                    }
+                },
+                { 
+                    data: "status_display", title: "Trạng thái",
+                    render: function(data, type, row) {
+                        const statusClass = statusColorMapping[row.status] || 'text-dark';
+                        return `<span class="${statusClass}">${data}</span>`;
+                    }
+                },
+                { 
+                    data: "created_at", title: "Ngày tạo",
+                    render: function(data) {
+                        return `<i class="fa-solid fa-clock"></i> ${data}`;
+                    }
+                },
+                {% if is_manager %}
+                { 
+                    data: "id", title: "Thao tác",
+                    render: function(data, type, row) {
+                        // Chỉ hiển thị nút duyệt nếu trạng thái là "pending"
+                       
+                        if (row.status === 'pending') {
+                            return `
+                                <button type='button' class="btn btn-light btn-sm approve-registration"
+                                    data-id="${row.id}" 
+                                    data-employee="${row.employee_name}" 
+                                    data-date="${row.date}" 
+                                    data-shift="${row.shift_type_display}"
+                                    data-is-off="${row.is_off_display}"
+                                    data-reason="${row.reason}">
+                                    <i class="fa-solid fa-check-circle text-success"></i>
+                                </button>`;
+                        }
+                        return '<span class="text-muted">-</span>';
+                    }
+                }
+                {%endif%}
+            ]
+        });
+
+        // Xử lý nút lọc ca làm việc
+        $('#btn-filter-shift').on('click', function() {
+            tableShifts.ajax.reload();
+        });
+
+        // Xử lý nút reset lọc ca làm việc
+        $('#btn-reset-shift').on('click', function() {
+            $('#filter-employee-shift').val('');
+            $('#filter-date-from-shift').val('');
+            $('#filter-date-to-shift').val('');
+            $('#filter-shift-type').val('');
+            $('#filter-status-shift').val('');
+            tableShifts.ajax.reload();
+        });
+
+        // Xử lý nút lọc đăng ký ca
+        $('#btn-filter-reg').on('click', function() {
+            tableRegistrations.ajax.reload();
+        });
+
+        // Xử lý nút reset lọc đăng ký ca
+        $('#btn-reset-reg').on('click', function() {
+            $('#filter-employee-reg').val('');
+            $('#filter-date-from-reg').val('');
+            $('#filter-date-to-reg').val('');
+            $('#filter-is-off').val('');
+            $('#filter-status-reg').val('');
+            tableRegistrations.ajax.reload();
+        });
+
+        // Xử lý nút đăng ký ca làm việc
+        $('#btnRegisterShift').on('click', function() {
+            const form = $('#registerShiftForm');
+            
+            if (!form[0].checkValidity()) {
+                form[0].reportValidity();
+                return;
+            }
+            
+            const formData = new FormData(form[0]);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            
+            $.ajax({
+                url: "{{ url('web_01:register_shift') }}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function() {
+                    $('#btnRegisterShift').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalRegisterShift').modal('hide');
+                        form[0].reset();
+                        tableRegistrations.ajax.reload();
+                        toastr.success(response.message);
+                    } else {
+                        showToast('error', 'Lỗi', response.message || 'Không thể đăng ký ca làm việc');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showToast('error', 'Lỗi', 'Không thể đăng ký ca làm việc');
+                    console.error("Lỗi đăng ký ca làm việc:", error);
+                },
+                complete: function() {
+                    $('#btnRegisterShift').prop('disabled', false).html('Đăng ký');
+                }
+            });
+        });
+
+        // Xử lý nút đăng ký nghỉ
+        $('#btnRegisterOff').on('click', function() {
+            const form = $('#registerOffForm');
+            
+            if (!form[0].checkValidity()) {
+                form[0].reportValidity();
+                return;
+            }
+            
+            const formData = new FormData(form[0]);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            
+            $.ajax({
+                url: "{{ url('web_01:register_shift') }}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function() {
+                    $('#btnRegisterOff').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalRegisterOff').modal('hide');
+                        form[0].reset();
+                        tableRegistrations.ajax.reload();
+                        toastr.success(response.message);
+                    } else {
+                        showToast('error', 'Lỗi', response.message || 'Không thể đăng ký nghỉ');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showToast('error', 'Lỗi', 'Không thể đăng ký nghỉ');
+                    console.error("Lỗi đăng ký nghỉ:", error);
+                },
+                complete: function() {
+                    $('#btnRegisterOff').prop('disabled', false).html('Đăng ký');
+                }
+            });
+        });
+
+        // Xử lý nút duyệt đăng ký
+        $(document).on('click', '.approve-registration', function() {
+            const id = $(this).data('id');
+            const employee = $(this).data('employee');
+            const date = $(this).data('date');
+            const shift = $(this).data('shift');
+            const isOff = $(this).data('is-off');
+            const reason = $(this).data('reason');
+            
+            $('#approve_registration_id').val(id);
+            $('#approve_employee_name').text(employee);
+            $('#approve_date').text(date);
+            $('#approve_shift_type').text(shift);
+            $('#approve_is_off').text(isOff);
+            $('#approve_reason').text(reason || '-');
+            
+            $('#modalApproveRegistration').modal('show');
+        });
+
+        // Xử lý nút duyệt trong modal
+        $('#btnApproveRegistration').on('click', function() {
+            const registrationId = $('#approve_registration_id').val();
+            
+            $.ajax({
+                url: "{{ url('web_01:approve_registration') }}",
+                type: "POST",
+                data: {
+                    registration_id: registrationId,
+                    status: 'approved',
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                beforeSend: function() {
+                    $('#btnApproveRegistration').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalApproveRegistration').modal('hide');
+                        tableRegistrations.ajax.reload();
+                        tableShifts.ajax.reload();
+                        toastr.success(response.message);
+                    } else {
+                        showToast('error', 'Lỗi', response.message || 'Không thể duyệt đăng ký');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showToast('error', 'Lỗi', 'Không thể duyệt đăng ký');
+                    console.error("Lỗi duyệt đăng ký:", error);
+                },
+                complete: function() {
+                    $('#btnApproveRegistration').prop('disabled', false).html('Duyệt');
+                }
+            });
+        });
+
+        // Xử lý nút từ chối trong modal
+        $('#btnRejectRegistration').on('click', function() {
+            const registrationId = $('#approve_registration_id').val();
+            
+            $.ajax({
+                url: "{{ url('web_01:approve_registration') }}",
+                type: "POST",
+                data: {
+                    registration_id: registrationId,
+                    status: 'rejected',
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                beforeSend: function() {
+                    $('#btnRejectRegistration').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalApproveRegistration').modal('hide');
+                        tableRegistrations.ajax.reload();
+                        toastr.success(response.message);
+                    } else {
+                        showToast('error', 'Lỗi', response.message || 'Không thể từ chối đăng ký');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showToast('error', 'Lỗi', 'Không thể từ chối đăng ký');
+                    console.error("Lỗi từ chối đăng ký:", error);
+                },
+                complete: function() {
+                    $('#btnRejectRegistration').prop('disabled', false).html('Từ chối');
+                }
+            });
+        });
+
+        // Xử lý nút chấm công vào
+        $(document).on('click', '.check-in', function() {
+            const id = $(this).data('id');
+            const employee = $(this).data('employee');
+            const date = $(this).data('date');
+            const shift = $(this).data('shift');
+            const status = $(this).data('status');
+            
+            $('#check_shift_id').val(id);
+            $('#check_employee_name').text(employee);
+            $('#check_date').text(date);
+            $('#check_shift_type').text(shift);
+            $('#check_status').text(status);
+            
+            $('#check_action').val('in');
+            $('#check_in_section').show();
+            $('#check_out_section').hide();
+            $('#btnCheckInOut').text('Chấm công vào');
+            
+            $('#modalCheckInOut').modal('show');
+        });
+
+        // Xử lý nút chấm công ra
+        $(document).on('click', '.check-out', function() {
+            const id = $(this).data('id');
+            const employee = $(this).data('employee');
+            const date = $(this).data('date');
+            const shift = $(this).data('shift');
+            const status = $(this).data('status');
+            const timeStart = $(this).data('time-start');
+            
+            $('#check_shift_id').val(id);
+            $('#check_employee_name').text(employee);
+            $('#check_date').text(date);
+            $('#check_shift_type').text(shift);
+            $('#check_status').text(status);
+            $('#check_time_start').text(timeStart);
+            
+            $('#check_action').val('out');
+            $('#check_in_section').hide();
+            $('#check_out_section').show();
+            $('#btnCheckInOut').text('Chấm công ra');
+            
+            $('#modalCheckInOut').modal('show');
+        });
+
+        // Xử lý nút chấm công trong modal
+        $('#btnCheckInOut').on('click', function() {
+            const shiftId = $('#check_shift_id').val();
+            const action = $('#check_action').val();
+            
+            const url = action === 'in' ? 
+                "{{ url('web_01:check_in') }}" : 
+                "{{ url('web_01:check_out') }}";
+            
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: {
+                    shift_id: shiftId,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                beforeSend: function() {
+                    $('#btnCheckInOut').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#modalCheckInOut').modal('hide');
+                        tableShifts.ajax.reload();
+                        toastr.success(response.message);
+                    } else {
+                        showToast('error', 'Lỗi', response.message || 'Không thể chấm công');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showToast('error', 'Lỗi', 'Không thể chấm công');
+                    console.error("Lỗi chấm công:", error);
+                },
+                complete: function() {
+                    $('#btnCheckInOut').prop('disabled', false).html(action === 'in' ? 'Chấm công vào' : 'Chấm công ra');
+                }
+            });
+        });
+
+        // Helper function to show toast notifications
+        function showToast(type, title, message) {
+            // Check if your template has a toast function
+            if (typeof window.showToast === 'function') {
+                window.showToast(type, title, message);
+            } else {
+                // Fallback alert if no toast function exists
+                alert(`${title}: ${message}`);
+            }
+        }
+
+        // Set default date values to today
+        const today = new Date().toISOString().split('T')[0];
+        $('#date').val(today);
+        $('#date_off').val(today);
+    });
+</script>
+{% endblock %}

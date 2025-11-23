@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Title -->
+	<title>RMS 65</title>
+
+	<!-- Meta -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="author" content="DexignZone">
+	<meta name="robots" content="">
+
+	<!-- Mobile Specific -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- Font awesome-->
+	
+	<link href="/static/vendor/fontawesome/css/fontawesome.min.css" rel="stylesheet">
+	<!-- Datatable -->
+	<link href="/static/vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
+	<link href="/static/vendor/datatables/css/responsive.bootstrap.min.css" rel="stylesheet">
+
+	<!-- Bootstrap Validator -->
+	<!-- Bootstrap CSS (nếu chưa có) -->
+	<link href="/static/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+	<!-- BootstrapValidator CSS -->
+	<link href="/static/vendor/bootstrap/bootstrapValidator.min.css" rel="stylesheet">
+	<!-- Select 2 CSS -->
+	<link rel="stylesheet" href="/static/vendor/select2/css/select2.min.css">
+
+
+	
+    <!-- Favicon icon -->
+	<link href='/static/vendor/spinkit/css/spinkit.css' rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/images/logo.png">
+	<link rel="stylesheet" href='{{ static ("/vendor/chartist/css/chartist.min.css") }}'>
+    <!-- <link href="/static/vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet"> -->
+	<link href='{{ static ("/vendor/bootstrap-datepicker-master/css/bootstrap-datepicker.min.css") }}' rel="stylesheet">
+    <link href='{{ static ("/css/style.css") }}?v=2' rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&amp;family=Roboto:wght@100;300;400;500;700;900&amp;display=swap" rel="stylesheet">
+	
+
+	<!-- Toastr CSS -->
+	<link rel="stylesheet" href='{{ static ("/vendor/toastr/css/toastr.min.css") }}'>
+	
+	<script src='{{ static ("/vendor/jquery/jquery.min.js") }}'></script>
+	<!-- SweetAlert2 -->
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+	<script>
+		// WebSocket setup
+		var socket = new WebSocket("ws://localhost:5001/ws/notifications/order/");
+
+		socket.onopen = () => {
+		console.log("BE: WebSocket connected!");
+		};
+
+		socket.onerror = function (err) {
+		console.error("WebSocket error", err);
+		};
+
+		socket.onclose = function () {
+		console.log("WebSocket closed");
+		};
+
+	</script>
+	{%block link%}{%endblock%}
+</head>
+<body>
+
+    <!--*******************
+        Preloader start
+    ********************-->
+    <div id="preloader">
+        <div class="sk-three-bounce">
+            <div class="sk-child sk-bounce1"></div>
+            <div class="sk-child sk-bounce2"></div>
+            <div class="sk-child sk-bounce3"></div>
+        </div>
+    </div>
+    <!--*******************
+        Preloader end
+    ********************-->
+
+    <!--**********************************
+        Main wrapper start
+    ***********************************-->
+    <div id="main-wrapper" class='show menu-toggle'>
+
+        <!--**********************************
+            Nav header start
+        ***********************************-->
+		{% if request.user.employee and request.user.employee.role == 'chef'%}
+		{%else%}
+        <div class="nav-header">
+            <a href="/" class="brand-logo">
+                <img class="logo-abbr" src="/static/images/logo.png" alt="/">
+                <img class="logo-compact" src="/static/images/logo-text.png" alt="/">
+                <img class="brand-title" src="/static/images/logo-text.png" alt="/">
+            </a>
+
+            <div class="nav-control">
+                <div class="hamburger">
+                    <span class="line"></span><span class="line"></span><span class="line"></span>
+                </div>
+            </div>
+        </div>
+		{%endif%}
+        <!--**********************************
+            Nav header end
+        ***********************************-->
+		
+		<!--**********************************
+            Header start
+        ***********************************-->
+		{% include '/base/header.html'%}
+        <!--**********************************
+            Header end ti-comment-alt
+        ***********************************-->
+
+        <!--**********************************
+            Sidebar start
+        ***********************************-->
+		{% if request.user.employee and request.user.employee.role == 'chef'%}
+		{%else%}
+		{% include '/base/sidebar.html'%}
+		{%endif%}
+        <!--**********************************
+            Sidebar end
+        ***********************************-->
+		
+		<!--**********************************
+            Content body start
+        ***********************************-->
+        <div class="content-body">
+            <!-- row -->
+			<div class="container-fluid">
+				<!-- Add Order -->
+				{% block body%}
+				{% endblock %}
+            </div>
+        </div>
+        <!--**********************************
+            Content body end
+        ***********************************-->
+
+        <!--**********************************
+            Footer start
+        ***********************************-->
+        <div class="footer">
+            <div class="copyright">
+                RMS
+            </div>
+        </div>
+
+
+		{% if is_superuser %}
+			{% include '/apps/web_01/dashboard/chatbot.html' %}
+		{%endif%}
+
+        <!--**********************************
+            Footer end
+        ***********************************-->
+
+		<!--**********************************
+           Support ticket button start
+        ***********************************-->
+
+        <!--**********************************
+           Support ticket button end
+        ***********************************-->
+
+
+    </div>
+
+
+	
+
+    <script src='{{ static ("/vendor/global/global.min.js") }}'></script>
+	<!-- <script src="/static/vendor/bootstrap-select/dist/js/bootstrap-select.min.js"></script> -->
+    <script src='{{ static ("/vendor/bootstrap-datepicker-master/js/bootstrap-datepicker.min.js") }}'></script>
+	<script src='{{ static ("/vendor/chart.js/Chart.bundle.min.js") }}'></script>
+    <script src='{{ static ("/js/custom.min.js") }}'></script>
+	<script src='{{ static ("/js/deznav-init.js") }}'></script>
+	<!-- Bootstrap Validator -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.3/js/bootstrapValidator.min.js"></script>
+
+	<!-- Chart piety plugin files -->
+    <script src='{{ static ("/vendor/peity/jquery.peity.min.js") }}'></script>
+	<!-- Datatable -->
+	<script src='{{ static ("/js/config/datatable_config.js") }}'></script>
+	<script src='{{ static ("/vendor/datatables/js/jquery.dataTables.min.js") }}'></script>
+	<script src='{{ static ("/vendor/datatables/js/dataTables.responsive.min.js") }}'></script>
+	<!--<script src="/static/js/plugins-init/datatables.init.js"></script>-->
+	<!-- Select 2-->
+	<script src='{{ static ("/vendor/select2/js/select2.full.min.js") }}'></script>
+    <script src='{{ static ("/js/plugins-init/select2-init.js") }}'></script>
+
+	<!-- Toastr JS -->
+	<script src='{{ static ("/vendor/toastr/js/toastr.min.js") }}'></script>
+
+	
+
+	<!-- Custom JS-->
+	<script src='{{ static ("/js/config/show_message.js") }}'></script>
+	
+	<script src='{{ static ("/js/loading-bar.js") }}'></script>
+	<script>
+		function load_notification_list() {
+			$.ajax({
+			  url: "{{ url('web_01:get_notification') }}",
+			  type: "GET",
+			  success: function (response) {
+				let html = response.notification_html; // ✅ sửa ở đây
+				let len_notification = response.notification_len; // ✅ sửa ở đây
+				$("#DZ_W_Notification1").html(html);
+				$("#number-of-notification")
+				.text(len_notification)
+				.addClass("badge-update");
+		
+				setTimeout(() => {
+					$("#number-of-notification").removeClass("badge-update");
+				}, 500); // xóa class sau hiệu ứng
+			  },
+			  error: function (xhr, status, error) {
+				console.error("Lỗi khi tải thông báo:", error);
+				$("#DZ_W_Notification1").html(
+				  '<p class="text-danger">Không thể tải thông báo.</p>'
+				);
+			  },
+			});
+		  }
+
+		  
+
+
+	</script>
+	<script src='{{ static ("/cjs/socket.js") }}?v=8'></script>
+	
+	<!-- Apex Chart -->
+
+	{%block script%}{%endblock%}
+	
+
+	
+</body>
+</html>

@@ -1,0 +1,52 @@
+<form id="importProductForm" enctype="multipart/form-data" action="{{ url('web_01:import_product') }}">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"/> 
+    <div class="mb-3">
+        <label for="excelFile" class="form-label">Chọn file Excel</label>
+        <input type="file" class="form-control form-control-sm" id="excelFile" name="excelFile" accept=".xlsx,.xls" required>
+    </div>
+    <button type="submit" class="btn btn-success float-right btn-sm">📤 Nhập</button>
+</form>
+
+
+
+{% block script %}
+<script src="/static/vendor/jquery/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#importProductForm").submit(function (event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+            let form = $(this);
+            disable_element($('#importProductForm'));
+            $.ajax({
+                url: form.attr("action"),
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    "X-CSRFToken": $("input[name=csrfmiddlewaretoken]").val()
+                },
+                beforeSend: function () {
+                    $("#importProductForm button[type=submit]").prop("disabled", true).text("⏳ Đang nhập...");
+                },
+                success: function (data) {
+                    if (data.success) {
+                        show_toastr("✅ Nhập sản phẩm thành công!", "success");
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        alert("❌ Lỗi khi nhập sản phẩm: " + data.message);
+                    }
+                    enable_element($('#importProductForm'));
+                },
+                error: function (xhr, status, error) {
+                    alert("❌ Lỗi kết nối: " + error);
+                },
+                complete: function () {
+                    $("#importProductForm button[type=submit]").prop("disabled", false).text("📤 Nhập");
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

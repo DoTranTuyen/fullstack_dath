@@ -1,0 +1,96 @@
+<div class="modal-header">
+    <h5 class="modal-title">Mã QR Bàn {{ table.table_number }}</h5>
+    <span class="close close-qr-manual" data-dismiss="modal" aria-label="Close" >
+        <i class="fa-regular fa-circle-xmark"></i>
+    </button>
+</div>
+
+<div class="modal-body text-center">
+    {% if table.qr_image %}
+        <div class="mb-4">
+            <img src="{{ table.qr_image.url }}" alt="QR Code" class="img-fluid" style="max-width: 300px;">
+        </div>
+        <p class="mb-2">Quét mã QR để truy cập vào bàn</p>
+    {% else %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle mr-2"></i> Chưa có mã QR cho bàn này.
+        </div>
+    {% endif %}
+</div>
+
+<div class="modal-footer">
+    {% if table.qr_image %}
+        <a href="{{ table.qr_image.url }}" download="QR_Ban_{{ table.table_number }}.png" class="btn btn-success">
+            <i class="fas fa-download fa-sm"></i> Tải xuống
+        </a>
+        <button id="print-qr-popup" class="btn btn-info">
+            <i class="fas fa-print fa-sm"></i> In mã QR
+        </button>
+
+        <button type="buttom" id='btn-reset-qr' class="btn btn-primary">
+            <i class="fas fa-sync-alt fa-sm"></i> Reset QR
+        </button>
+    {% endif %}
+    <button type="button" class="btn btn-secondary close-qr-manual" data-dismiss="modal">Đóng</button>
+</div>
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        $('#print-qr-popup').click(function() {
+            var printWindow = window.open('', '_blank');
+            printWindow.document.write('<html><head><title>Mã QR Bàn {{ table.table_number }}</title>');
+            printWindow.document.write('<style>body { font-family: Arial, sans-serif; text-align: center; } .qr-container { margin: 20px auto; max-width: 400px; } h2 { margin-bottom: 20px; } img { max-width: 100%; height: auto; }</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write('<div class="qr-container">');
+            printWindow.document.write('<h2>Mã QR Bàn {{ table.table_number }}</h2>');
+            printWindow.document.write('<img src="{{ table.qr_image.url }}" alt="QR Code">');
+            printWindow.document.write('<p>Quét mã QR để truy cập vào bàn</p>');
+            printWindow.document.write('</div>');
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        });
+
+        $('.close-qr-manual').click(function () {
+            $('#qrModal').modal('hide');
+        });
+
+        $('#btn-reset-qr').click(function() {
+            event.preventDefault();  // <- Thêm dòng này
+
+            disable_element($('.modal-body'));
+            
+            // Gửi AJAX request
+            $.ajax({
+                url: "{{url('web_01:manager_table_qr',args=(table.id,))}}",
+                type: "POST",
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                contentType: "application/json",
+                success: function(response) {
+                    // Hiển thị thông báo thành công
+                    toastr.success(response.message);
+                    
+                    // Đóng modal
+                    $('#qrModal').modal('hide');
+                    
+                    // Làm mới trang sau 1 giây
+                    setTimeout(function() {
+                        location.reload();
+                        enable_element($('.modal-body'));
+                    }, 1000);
+                },
+                error: function(xhr, status, error) {
+                    // Hiển thị thông báo lỗi
+                    var errorMessage = xhr.responseJSON ? xhr.responseJSON.message : "Đã xảy ra lỗi đặt lại mã QR bàn!";
+                    toastr.error(errorMessage);
+                    enable_element($('.modal-body'));
+                }
+            });
+        });
+    });
+
+</script>
+{%endblock%}

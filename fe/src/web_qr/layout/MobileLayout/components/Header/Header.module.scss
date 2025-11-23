@@ -1,0 +1,103 @@
+.cs-navbar {
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+    color: #000 !important;
+    top: 0;
+
+
+    &.navbar-light {
+        background-color: var(--bg-light);
+        color: var(--text-light);
+
+        .text-white {
+            color: var(--text-light) !important; // Chuyển chữ thành màu đen khi light mode
+        }
+
+        .icon {
+            color: var(--text-light) !important; // Đổi màu icon
+        }
+
+        border-bottom: 1px solid rgb(195 193 204) !important;
+
+    }
+
+    &.navbar-dark {
+        background-color: var(--bg-color-default);
+        color: var(--text-dark);
+
+        .text-white {
+            color: var(--text-dark) !important; // Chữ màu trắng khi dark mode
+        }
+
+        .icon {
+            color: var(--text-dark) !important; // Đổi màu icon
+        }
+    }
+}
+
+.navbar-toggler {
+    border: 1px solid #302d43 !important;
+    border-radius: 7px;
+    background-color: transparent;
+    padding: 8px;
+    color: #fff !important;
+
+
+
+    .navbar-toggler-icon {
+        display: inline-block;
+        width: 1.5em;
+        height: 1.5em;
+        vertical-align: middle;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30' fill='white'%3E%3Cpath stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 100%;
+
+        [data-theme="light"] & {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30' fill='white'%3E%3Cpath stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+        }
+    }
+
+    @media (min-width: 992px) {
+        display: none !important; // Ẩn trên màn hình lớn
+    }
+}
+
+.custom-button {
+    border: 1px solid #302d43 !important;
+    width: 150px;
+    background-color: transparent !important;
+    color: white !important; // Mặc định cho dark mode
+
+    [data-theme="light"] & {
+        color: black !important; // Chữ đen khi light mode
+    }
+}
+
+.custom-dropdown {
+    min-width: 100% !important;
+    margin-top: 8px !important;
+}
+
+.custom-button-theme {
+    border: 1px solid #302d43 !important;
+    width: 37px;
+    height: 37px;
+    border-radius: 50% !important;
+    background-color: transparent !important;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+
+    &::after {
+        display: none !important;
+    }
+
+    .icon {
+        font-size: 20px !important;
+        position: absolute;
+        left: 10px;
+    }
+}

@@ -1,0 +1,395 @@
+{% extends 'base/base.html' %}
+{% import "/apps/web_01/commom/macros.html" as macros %}
+{% block body %}
+<div class="row">
+    <div class="col-xl-3 col-xxl-3 col-lg-6 col-md-6 col-sm-6">
+        <div class="widget-stat card">
+            <div class="card-body p-4">
+                <div class="media ai-icon">
+                    <span class="mr-3 bgl-primary text-primary">
+                        <i class="fa fa-shopping-cart"></i>
+                    </span>
+                    <div class="media-body mx-2">
+                        <h3 class="mb-0 text-black"><span class="counter ml-0">{{ total_orders_today }}</span></h3>
+                        <p class="mb-0">Đơn hàng hôm nay</p>
+                        <small>Tổng số đơn hàng trong ngày</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-xxl-3 col-lg-6 col-md-6 col-sm-6">
+        <div class="widget-stat card">
+            <div class="card-body p-4">
+                <div class="media ai-icon">
+                    <span class="mr-3 bgl-warning text-warning">
+                        <i class="fa fa-money-bill-alt"></i>
+                    </span>
+                    <div class="media-body mx-2">
+                        <h3 class="mb-0 text-black">{{ macros.format_currency(revenue_today) }}</h3>
+                        <p class="mb-0">Doanh thu hôm nay</p>
+                        <small>Tổng doanh thu trong ngày</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-xxl-3 col-lg-6 col-md-6 col-sm-6">
+        <div class="widget-stat card">
+            <div class="card-body p-4">
+                <div class="media ai-icon">
+                    <span class="mr-3 bgl-success text-success">
+                        <i class="fa fa-chart-line"></i>
+                    </span>
+                    <div class="media-body mx-2">
+                        <h3 class="mb-0 text-black">{{ macros.format_currency(revenue_month) }}</h3>
+                        <p class="mb-0">Doanh thu tháng</p>
+                        <small>Tổng doanh thu trong tháng</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-xxl-3 col-lg-6 col-md-6 col-sm-6">
+        <div class="widget-stat card">
+            <div class="card-body p-4">
+                <div class="media ai-icon">
+                    <span class="mr-3 bgl-danger text-danger">
+                        <i class="fa fa-table"></i>
+                    </span>
+                    <div class="media-body mx-2">
+                        <h3 class="mb-0 text-black">
+                            <span class="counter ml-0">{{ tables_status.occupied }}</span>/{{ tables_status.available + tables_status.occupied + tables_status.reserved }}
+                        </h3>
+                        <p class="mb-0">Bàn đang sử dụng</p>
+                        <small>Số bàn đang phục vụ khách</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Biểu đồ doanh thu 7 ngày gần nhất -->
+<div class="row">
+    <div class="col-xl-8 col-lg-12">
+        <div class="card">
+            <div class="card-header border-0 pb-0">
+                <h4 class="card-title">Doanh thu 7 ngày gần nhất</h4>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-lg-12">
+        <div class="card">
+            <div class="card-header border-0 pb-0">
+                <h4 class="card-title">Tỷ lệ đơn hàng theo trạng thái</h4>
+            </div>
+            <div class="card-body">
+                <canvas id="orderStatusChart" height="230"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-8 col-xxl-8 col-lg-8">
+        <div class="card">
+            <div class="card-header border-0 pb-0">
+                <h4 class="card-title">Sản phẩm bán chạy</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-responsive-md">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Số lượng đã bán</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in best_selling %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ item.product__name }}</td>
+                                <td>{{ item.total_sold }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-xxl-4 col-lg-4">
+        <div class="card">
+            <div class="card-header border-0 pb-0">
+                <h4 class="card-title">Cảnh báo tồn kho</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-responsive-md">
+                        <thead>
+                            <tr>
+                                <th>Nguyên liệu</th>
+                                <th>Tồn kho</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in low_stock_items %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>
+                                    <span class="badge badge-outline-danger">{{ item.quantity_in_stock }} {{ item.unit }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Biểu đồ doanh thu theo danh mục và tồn kho nguyên liệu -->
+<div class="row">
+    <div class="col-xl-6 col-lg-12">
+        <div class="card">
+            <div class="card-header border-0 pb-0">
+                <h4 class="card-title">Doanh thu theo danh mục</h4>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryRevenueChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-6 col-lg-12">
+        <div class="card">
+            <div class="card-header border-0 pb-0">
+                <h4 class="card-title">Tồn kho nguyên liệu chính</h4>
+            </div>
+            <div class="card-body">
+                <canvas id="ingredientStockChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trạng thái bàn - Phiên bản cải tiến -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header border-0 pb-0 d-flex justify-content-between align-items-center">
+                <h4 class="card-title">Bàn</h4>
+                <div class="d-flex align-items-center">
+                    <span class="badge badge-outline-success me-2"><i class="fa fa-check-circle"></i> Trống</span>
+                    <span class="badge badge-outline-danger me-2"> <i class="fa fa-users"></i> Đang sử dụng</span>
+                    <span class="badge badge-outline-warning"><i class="fa fa-clock"></i> Đã đặt</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for table in tables %}
+                    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+                        <div class="card text-center h-100 {% if table.status == 'available' %}border-success{% elif table.status == 'occupied' %}border-danger{% else %}border-warning{% endif %}">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="card-title mb-0">Bàn {{ table.table_number }}</h5>
+                                    <span class="badge {% if table.status == 'available' %}badge-outline-success{% elif table.status == 'occupied' %}badge-outline-danger{% else %}badge-outline-warning{% endif %}">
+                                        {% if table.status == 'available' %}
+                                            <i class="fa fa-check-circle"></i> Trống
+                                        {% elif table.status == 'occupied' %}
+                                            <i class="fa fa-users"></i> Đang sử dụng
+                                        {% else %}
+                                            <i class="fa fa-clock"></i> Đã đặt
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                {% if table.status == 'occupied' and table.current_session %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fa fa-clock"></i> {{ table.current_session.started_at.strftime('%d/%m/%Y %H:%M') }}
+                                    </small>
+                                </div>
+                                <a href="{{url('web_01:service_list')}}?table={{table.id}}" class='btn btn-primary light btn-sm mt-2'><i class="fa-solid fa-location-arrow"></i></a>
+                                {% endif %}
+                               
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Dữ liệu cho biểu đồ doanh thu 7 ngày gần nhất
+            var revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            var revenueChart = new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ day_labels|tojson }},
+                    datasets: [{
+                        label: 'Doanh thu (đ)',
+                        data: {{ revenue_by_day|tojson }},
+                        backgroundColor: 'rgba(59, 125, 221, 0.1)',
+                        borderColor: 'rgba(59, 125, 221, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(59, 125, 221, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(59, 125, 221, 1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString() + 'đ';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.raw.toLocaleString() + 'đ';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Biểu đồ tỷ lệ đơn hàng theo trạng thái
+            var orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
+            var statusLabels = [];
+            var statusData = [];
+            var statusColors = {
+                'pending': '#FFA500',
+                'in_progress': '#3b7ddd',
+                'completed': '#28a745',
+                'cancelled': '#dc3545'
+            };
+            var backgroundColors = [];
+
+            {% for status in order_status_counts %}
+                statusLabels.push('{{ status.status }}' === 'pending' ? 'Chờ' : 
+                                '{{ status.status }}' === 'in_progress' ? 'Đang làm' : 
+                                '{{ status.status }}' === 'completed' ? 'Hoàn thành' : 'Hủy');
+                statusData.push({{ status.count }});
+                backgroundColors.push(statusColors['{{ status.status }}']);
+            {% endfor %}
+
+            var orderStatusChart = new Chart(orderStatusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        data: statusData,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Biểu đồ doanh thu theo danh mục
+            var categoryCtx = document.getElementById('categoryRevenueChart').getContext('2d');
+            var categoryLabels = [];
+            var categoryData = [];
+            
+            {% for category in revenue_by_category %}
+                categoryLabels.push('{{ category.product__category__name }}');
+                categoryData.push({{ category.total }});
+            {% endfor %}
+            
+            var categoryRevenueChart = new Chart(categoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: categoryLabels,
+                    datasets: [{
+                        label: 'Doanh thu (đ)',
+                        data: categoryData,
+                        backgroundColor: 'rgba(59, 125, 221, 0.7)',
+                        borderColor: 'rgba(59, 125, 221, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString() + 'đ';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.raw.toLocaleString() + 'đ';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Biểu đồ tồn kho nguyên liệu
+            var ingredientCtx = document.getElementById('ingredientStockChart').getContext('2d');
+            var ingredientChart = new Chart(ingredientCtx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: {{ ingredient_labels|tojson }},
+                    datasets: [{
+                        label: 'Số lượng tồn kho',
+                        data: {{ ingredient_stocks|tojson }},
+                        backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                        borderColor: 'rgba(40, 167, 69, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+</script>
+{% endblock %}

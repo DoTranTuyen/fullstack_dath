@@ -1,0 +1,385 @@
+{% extends '/base/base.html'%}
+{%block body%}
+<div class="col-lg-12">
+    <!-- Tiêu đề trang -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Quản Lý Sản Phẩm</h1>
+        {% if is_manager %}
+        <div>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAddProduct">
+                <i class="fas fa-plus"></i> Thêm sản phẩm
+            </button>
+        </div>
+        {%endif%}
+    </div>
+
+    <!-- Card bộ lọc -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="select-category" class="form-label"><strong>Danh mục</strong></label>
+                    <select class="multi-select" style="width:100%;" name="category[]" multiple="multiple" class="form-control form-control-sm bg-white" id="select-category">
+                        {% set selected_categories = request.GET.get("category", "").split(",") | map("int") | list %}
+                        {% for id, name in category_list %}
+                            <option value="{{ id }}" {% if id in selected_categories %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label for="select-price" class="form-label"><strong>Giá</strong></label>
+                    <select class="form-control form-control-sm" id="select-price">
+                        <option value="-1">-- Tất cả --</option>
+                        {% set selected_price = request.GET.get("price", "-1") %}
+                        {% for id, name in price_list %}
+                            <option value="{{ id }}" {% if id == selected_price %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+             
+            </div>
+        </div>
+        <div class="card-footer">
+            <button type="button" class="btn btn-info btn-sm" id="btn-filter">
+                <i class="fa fa-filter"></i> Lọc
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-reset">
+                <i class="fa fa-times"></i> Xóa lọc
+            </button>
+        </div>
+    </div>
+
+    <!-- Card table list-->
+    <div id='data-table-list'>
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Danh sách sản phẩm</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-responsive-md" id='table_data' width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="25%">Tên sản phẩm</th>
+                                <th width="15%">Hình ảnh</th>
+                                <th width="15%">Danh mục</th>
+                                <th width="15%">Giá</th>
+                                <th width="10%">Trạng thái</th>
+                                <th width="15%">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% with 
+    modal_id = 'modalAddProduct',
+    modal_title='Thêm sản phẩm',
+    modal_class_size='modal-lg',
+    modal_body_tmp = '/apps/web_01/modal/modal_add_product.html'
+  %}
+    {% include '/popup/popup_create.html' %}
+  {%endwith%}
+
+  {% with 
+    modal_id = 'modalImportProduct',
+    modal_title='Thêm sản phẩm từ excel',
+    modal_class_size='modal-lg',
+    modal_body_tmp = '/apps/web_01/modal/modal_import_product.html'
+  %}
+    {% include '/popup/popup_create.html' %}
+  {%endwith%}
+
+{% with 
+    modal_id = 'modalDetailProduct',
+    modal_title='Chi tiết sản phẩm',
+    modal_class_size='modal-lg',
+    modal_body_tmp = '/apps/web_01/modal/modal_detail_product.html'
+  %}
+    {% include '/popup/popup_create.html' %}
+  {%endwith%}
+
+{% with 
+    modal_id = 'modalEditProduct',
+    modal_title='Chỉnh sửa sản phẩm',
+    modal_class_size='modal-lg',
+    modal_body_tmp = '/apps/web_01/modal/modal_edit_product.html'
+  %}
+    {% include '/popup/popup_create.html' %}
+  {%endwith%}
+
+{%endblock%}
+
+{% block script %}
+<script type="text/javascript">
+    // Cập nhật tham số URL
+    function updateUrlParams() {
+        let selectedCategories = $('#select-category').val() || [];
+        let selectedPrice = $('#select-price').val() || "-1";
+        let selectedStatus = $('#select-status').val() || "all";
+    
+        let params = new URLSearchParams(window.location.search);
+    
+        if (selectedCategories.length) {
+            params.set("category", selectedCategories.join(","));
+        } else {
+            params.delete("category");
+        }
+    
+        if (selectedPrice !== "-1") {
+            params.set("price", selectedPrice);
+        } else {
+            params.delete("price");
+        }
+        
+        if (selectedStatus !== "all") {
+            params.set("status", selectedStatus);
+        } else {
+            params.delete("status");
+        }
+    
+        let newUrl = window.location.pathname + "?" + params.toString();
+        window.history.replaceState(null, "", newUrl);
+    }
+
+    // Khởi tạo DataTable
+    $(document).ready(function () {
+        var table = $('#table_data').DataTable({
+            ...DATATABLE_CONFIG,
+            processing: true,
+            serverSide: true,
+            autoWidth: false,
+            responsive: true,
+            ajax: {
+                url: "{{url('web_01:product_list')}}",
+                type: "POST",
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                data: function (d) {
+                    let selectedCategories = $('#select-category').val() || [];
+                    d.category = JSON.stringify(selectedCategories);
+
+                    let selectedPrice = $('#select-price').val();
+                    d.price = selectedPrice;
+                    
+                    let selectedStatus = $('#select-status').val();
+                    d.status = selectedStatus;
+                },
+                beforeSend: function () {
+                    disable_element($('#table_data'));
+                },
+                complete: function () {
+                    enable_element($('#table_data'));
+                }
+            },
+            columns: [
+                { data: "index", title: "#" },
+                { data: "name", title: "Tên sản phẩm" },
+                {
+                    data: "image",
+                    title: "Hình ảnh",
+                    render: function(data) {
+                        return data 
+                            ? `<img src="${data}" alt="Hình ảnh sản phẩm" class="product-image" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);" />`
+                            : '<div class="text-center py-3 bg-light rounded"><i class="fas fa-image fa-2x text-muted"></i><p class="mb-0 mt-1 small text-muted">Chưa có ảnh</p></div>';
+                    }
+                },
+                { data: "category", title: "Danh mục" },
+                { data: "price", title: "Giá" },
+                {
+                    data: "status",
+                    title: "Trạng thái",
+                    render: function(data) {
+                        if(data == 'active'){
+                            return `<span class="badge bg-success">Đang bán</span>`;
+                        }
+                        return `<span class="badge bg-danger">Ngưng bán</span>`;
+                        
+                    }
+                },
+                {
+                    data: "id",
+                    title: "Thao tác",
+                    render: function(data, type, row) {
+                        return `
+                        <div class="d-flex">
+                            <button type='button' class="btn light btn-info shadow btn-xs sharp me-1" 
+                            data-id="${row.id}" 
+                            data-name="${row.name}" 
+                            data-bs-toggle="modal" data-bs-target="#modalDetailProduct"
+                            >
+                                <i class="fa fa-eye"></i>
+                            </button>
+                             {% if is_manager %}
+                            <button type='button' class="btn light btn-primary shadow btn-xs sharp me-1" 
+                            data-id="${row.id}" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalEditProduct"
+                            >
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            {%endif%}
+                        </div>
+                        `;
+                    }
+                }
+            ],
+            columnDefs: [
+                { orderable: false, targets: [2, 5, 6] },
+                { className: "align-middle", targets: "_all" }
+            ],
+            drawCallback: function() {
+                // Thêm hiệu ứng hover cho hàng
+                $('#table_data tbody tr').hover(
+                    function() {
+                        $(this).addClass('bg-light');
+                    },
+                    function() {
+                        $(this).removeClass('bg-light');
+                    }
+                );
+                
+                // Thêm tooltip cho hình ảnh
+                $('.product-image').tooltip({
+                    title: "Nhấp để xem ảnh lớn",
+                    placement: "top"
+                });
+            }
+        });
+
+        // Khi nhấn nút "Lọc"
+        $('#btn-filter').on('click', function () {
+            updateUrlParams();
+            table.ajax.reload();
+        });
+
+        // Khi nhấn nút "Xóa lọc"
+        $('#btn-reset').on('click', function () {
+            $('#select-category').val(null).trigger('change');
+            $('#select-price').val('-1').trigger('change');
+            $('#select-status').val('all').trigger('change');
+            updateUrlParams();
+            table.ajax.reload();
+        });
+        
+        // Xem ảnh lớn khi click vào ảnh sản phẩm
+        $(document).on('click', '.product-image', function() {
+            const imgSrc = $(this).attr('src');
+            Swal.fire({
+                imageUrl: imgSrc,
+                imageAlt: 'Hình ảnh sản phẩm',
+                showConfirmButton: false,
+                width: 'auto',
+                padding: '1em',
+                background: '#fff',
+                showCloseButton: true
+            });
+        });
+        
+        // Xuất danh sách sản phẩm
+        $('#export-products').on('click', function() {
+            let selectedCategories = $('#select-category').val() || [];
+            let selectedPrice = $('#select-price').val() || "-1";
+            let selectedStatus = $('#select-status').val() || "all";
+            
+            let params = new URLSearchParams();
+            
+            if (selectedCategories.length) {
+                params.set("category", selectedCategories.join(","));
+            }
+            
+            if (selectedPrice !== "-1") {
+                params.set("price", selectedPrice);
+            }
+            
+            if (selectedStatus !== "all") {
+                params.set("status", selectedStatus);
+            }
+            
+            window.location.href = "{{url('web_01:export_products')}}?" + params.toString();
+        });
+    });
+    
+    // Khởi tạo Select2
+    $('#select-category').select2({
+        placeholder: '-- Chọn danh mục --',
+        allowClear: true,
+        width: '100%',
+    });
+    
+    $('#select-price').select2({
+        placeholder: '-- Chọn giá --',
+        allowClear: true,
+        width: '100%',
+    });
+    
+    $('#select-status').select2({
+        placeholder: '-- Chọn trạng thái --',
+        allowClear: true,
+        width: '100%',
+    });
+    
+    // Hàm chỉnh sửa sản phẩm
+    function editProduct(productId) {
+        // Chuyển hướng đến trang chỉnh sửa sản phẩm
+        window.location.href = "edit_product ?id=" + productId;
+    }
+    
+    // Hàm xóa sản phẩm
+    function deleteProduct(productId) {
+        Swal.fire({
+            title: 'Xác nhận xóa?',
+            text: "Bạn có chắc chắn muốn xóa sản phẩm này?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "delete_product",
+                    type: "POST",
+                    data: {
+                        product_id: productId
+                    },
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            Swal.fire(
+                                'Đã xóa!',
+                                'Sản phẩm đã được xóa thành công.',
+                                'success'
+                            );
+                            $('#table_data').DataTable().ajax.reload();
+                        } else {
+                            Swal.fire(
+                                'Lỗi!',
+                                response.message || 'Không thể xóa sản phẩm.',
+                                'error'
+                            );
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Lỗi khi xóa sản phẩm:", error);
+                        Swal.fire(
+                            'Lỗi!',
+                            'Đã xảy ra lỗi khi xóa sản phẩm.',
+                            'error'
+                        );
+                    }
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,253 @@
+{% extends '/base/base.html'%}
+{% import "/apps/web_01/commom/macros.html" as macros %}
+{%block body%}
+<div class="col-lg-12">
+
+    <!-- Card table list-->
+    <div id='data-table-list'>
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Quản lí khách hàng</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-responsive-md" id='table_data'>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Khách hàng</th>
+                                <th>Số Điện Thoại</th>
+                                <th>Điểm tích lũy</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Modal Chỉnh sửa khách hàng -->
+    <div class="modal fade" id="modalEditCustomer" tabindex="-1" aria-labelledby="modalEditCustomerLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditCustomerLabel">Chỉnh sửa khách hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editCustomerForm">
+                        <input type="hidden" id="edit_customer_id">
+                        <div class="mb-3">
+                            <label for="edit_username" class="form-label">Tên đăng nhập</label>
+                            <input type="text" class="form-control" id="edit_username" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_loyalty_points" class="form-label">Điểm tích lũy</label>
+                            <input type="number" class="form-control" id="edit_loyalty_points" min="0">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="saveCustomerChanges">Lưu thay đổi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Xác nhận xóa -->
+    <div class="modal fade" id="modalDeleteConfirm" tabindex="-1" aria-labelledby="modalDeleteConfirmLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDeleteConfirmLabel">Xác nhận xóa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn xóa khách hàng này không?</p>
+                    <input type="hidden" id="delete_customer_id">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger" id="confirmDelete">Xác nhận xóa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+{%endblock%}
+
+{% block script %}
+<script type="text/javascript">
+    $(document).ready(function () {
+        var table = $('#table_data').DataTable({
+            ...DATATABLE_CONFIG,
+            processing: true,
+            serverSide: true,
+            autoWidth: false,
+            responsive: true,
+            ajax: {
+                url: "{{ url('web_01:customer_list') }}",
+                type: "POST",
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                beforeSend: function () {
+                    disable_element($('#table_data'));
+                },
+                complete: function () {
+                    enable_element($('#table_data'));
+                },
+                error: function(xhr, status, error) {
+                    console.error("Lỗi tải dữ liệu khách hàng:", error);
+                }
+            },
+            columns: [
+                { data: "index", title: "#" },
+                { 
+                    data: null, title: "Khách hàng",
+                    render: function(data, type, row) {
+                        const full_name = `${row.first_name || ''}`.trim();
+                        return `<span class=''>${full_name}</span>`;
+                    }
+                },
+                { 
+                    data: null, title: "Số Điện Thoại",
+                    render: function(data, type, row) {
+                        const username = row.username || "N/A";
+                        return `<span class=''>${username}</span>`;
+                    }
+                },
+                { 
+                    data: "loyalty_points", title: "Điểm tích lũy",
+                    render: function(data) {
+                        return `<span class="">${data} điểm</span>`;
+                    }
+                },
+                { 
+                    data: "created_at", title: "Ngày tạo",
+                    render: function(data) {
+                        return `<i class="fa fa-calendar"></i> ${data}`;
+                    }
+                },
+                { 
+                    data: "id", title: "Thao tác",
+                    render: function(data, type, row) {
+                        return `
+                            <button type='button' class="btn light btn-primary shadow btn-xs sharp me-1 edit-customer" 
+                            data-id="${row.id}" data-username="${row.username}" data-loyalty="${row.loyalty_points}">
+                                <i class="fa fa-pencil"></i>
+                            </button>
+
+                            <button type='button' class="btn light btn-danger shadow btn-xs sharp me-1 delete-customer" 
+                            data-id="${row.id}">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        `;
+                    }
+                }
+            ]
+        });
+
+        // Xử lý sự kiện click nút chỉnh sửa
+        $(document).on('click', '.edit-customer', function() {
+            const id = $(this).data('id');
+            const username = $(this).data('username');
+            const loyalty = $(this).data('loyalty');
+            
+            $('#edit_customer_id').val(id);
+            $('#edit_username').val(username);
+            $('#edit_loyalty_points').val(loyalty);
+            
+            $('#modalEditCustomer').modal('show');
+        });
+        
+        // Xử lý sự kiện lưu thay đổi
+        $('#saveCustomerChanges').on('click', function() {
+            const id = $('#edit_customer_id').val();
+            const loyalty_points = $('#edit_loyalty_points').val();
+            
+            // Gửi request cập nhật
+            $.ajax({
+                url: "{{ url('web_01:update_customer') }}",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    id: id,
+                    loyalty_points: loyalty_points
+                }),
+                success: function(response) {
+                    if (response.status === "success") {
+                        // Hiển thị thông báo thành công
+                        toastr.success(response.message);
+                        
+                        // Đóng modal
+                        $('#modalEditCustomer').modal('hide');
+                        
+                        // Refresh bảng dữ liệu
+                        table.ajax.reload();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    let errorMessage = "Đã xảy ra lỗi khi cập nhật";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    toastr.error(errorMessage);
+                }
+            });
+        });
+        
+        // Xử lý sự kiện click nút xóa
+        $(document).on('click', '.delete-customer', function() {
+            const id = $(this).data('id');
+            $('#delete_customer_id').val(id);
+            $('#modalDeleteConfirm').modal('show');
+        });
+        
+        // Xử lý sự kiện xác nhận xóa
+        $('#confirmDelete').on('click', function() {
+            const id = $('#delete_customer_id').val();
+            
+            // Gửi request xóa
+            $.ajax({
+                url: "{{ url('web_01:delete_customer') }}",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    id: id
+                }),
+                success: function(response) {
+                    if (response.status === "success") {
+                        // Hiển thị thông báo thành công
+                        toastr.success(response.message);
+                        
+                        // Đóng modal
+                        $('#modalDeleteConfirm').modal('hide');
+                        
+                        // Refresh bảng dữ liệu
+                        table.ajax.reload();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    let errorMessage = "Đã xảy ra lỗi khi xóa";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    toastr.error(errorMessage);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

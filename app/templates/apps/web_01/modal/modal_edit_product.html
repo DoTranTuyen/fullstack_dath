@@ -1,0 +1,42 @@
+
+{%block script%}
+<script type="text/javascript"> 
+    var is_reloading = false;
+    $(document).ready(function() {
+        // jquery has 
+        
+        $('#{{modal_id}}').on('shown.bs.modal', function (e) {
+            var product_id = $(e.relatedTarget).data('id');
+            // set title modal by product_name
+            disable_element($('#{{modal_id}} #modalBody'));
+            var url =  "{{ url('web_01:update_product')}}" +  "?product_id=" + product_id;
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "html",
+                success: function (response) {
+                    $('#{{modal_id}} #modalBody').html(response);
+                    is_reloading = false;
+                    enable_element($('#{{modal_id}} #modalBody'));
+                },
+                error: function (xhr, status, e) {
+                
+                }
+            });
+        });
+
+
+        $('#{{modal_id}}').on('hidden.bs.modal', function (e) {
+            if(is_reloading) {
+                location.reload();  
+            }else {
+                $('#{{modal_id}} #modalBody').html('');
+            }
+        });
+
+
+    });
+
+    
+</script>
+{%endblock%}

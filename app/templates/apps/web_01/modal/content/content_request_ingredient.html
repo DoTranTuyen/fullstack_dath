@@ -1,0 +1,73 @@
+<div class="row">
+    <div class="col-12">
+        <form id="requestIngredientForm">
+            <div class="mb-3">
+                <label class="form-label">Tên nguyên liệu <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Đơn vị tính <span class="text-danger">*</span></label>
+                <select name="unit" class="form-control" required>
+                    <option value="">-- Chọn đơn vị --</option>
+                    {% for unit_value, unit_name in units %}
+                    <option value="{{ unit_value }}">{{ unit_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Số lượng cần</label>
+                <input type="number" name="quantity" class="form-control" min="1" value="1">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Lý do yêu cầu</label>
+                <textarea name="note" class="form-control" rows="3" placeholder="Nhập lý do cần thêm nguyên liệu này..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Gửi yêu cầu
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Đóng
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Xử lý submit form
+        $('#requestIngredientForm').submit(function(e) {
+            e.preventDefault();
+            disable_element($('#{{modal_id}} #requestIngredientForm'));
+            $.ajax({
+                url: "{{ url('web_01:ingredient_request') }}",
+                type: "POST",
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                data: $(this).serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        $('#requestIngredientModal').modal('hide');
+                        // Hiển thị thông báo thành công
+                        toastr.success(response.message);
+                        // Reset form
+                        $('#requestIngredientForm')[0].reset();
+                    }
+                    enable_element($('#{{modal_id}} #requestIngredientForm'));
+                },
+                error: function(xhr) {
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        toastr.error(xhr.responseJSON.error);
+                    } else {
+                        toastr.error('Đã xảy ra lỗi khi gửi yêu cầu!');
+                    }
+                    enable_element($('#{{modal_id}} #requestIngredientForm'));
+                }
+            });
+        });
+    });
+</script>

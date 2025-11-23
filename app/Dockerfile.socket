@@ -1,0 +1,16 @@
+# Use Python 3.11 base image
+FROM python:3.11
+ENV PYTHONUNBUFFERED 1
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the application code
+COPY . .
+
+# Upgrade pip and install dependencies
+RUN python -m pip install --upgrade pip
+RUN python -m pip install -r requirements.txt
+
+# Command to start Daphne for ASGI
+CMD ["daphne", "-b", "0.0.0.0", "-p", "7000", "core.asgi:application"]

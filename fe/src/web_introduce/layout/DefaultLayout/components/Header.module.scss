@@ -1,0 +1,196 @@
+.cs-bg-header {
+  position: fixed;
+  top     : 0;
+  left    : 0;
+  width   : 100%;
+  z-index : 999;
+  height  : var(--height-header);
+  position: relative;
+}
+
+.cs-logo-large {
+  position: absolute;
+  top     : 0;
+  left    : 0;
+  width   : 100%;
+  height  : 100%;
+  z-index : -1;
+}
+
+.cs-img-large {
+  width          : 100%;
+  height         : 100%;
+  object-fit     : cover;
+  object-position: right top;
+}
+
+.cs-logo {
+  font-size      : 20px;
+  font-family    : 'Dancing Script';
+  color          : #fff;
+  font-weight    : 700;
+  text-decoration: none;
+}
+
+.cs-text-center {
+  font-size      : 16px;
+  color          : #fff;
+  padding        : 5px 20px;
+  text-decoration: none;
+  position: relative;
+
+  &:hover {
+    cursor: pointer;
+    color : var(--foreignKey);
+  }
+
+  &.active {
+    color: var(--foreignKey);
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30px;
+      height: 2px;
+      background-color: var(--foreignKey);
+    }
+  }
+}
+
+.cs-icon {
+  margin   : 10px;
+  font-size: 18px;
+  color    : #fff;
+
+  &:hover {
+    cursor: pointer;
+    color : var(--foreignKey);
+  }
+}
+
+.cs-select-language {
+  border       : none !important;
+  color        : #000 !important;
+  border-radius: 10px !important;
+  margin-left  : 10px !important;
+  height       : 30px;
+
+  &:focus-visible {
+    outline: none !important;
+  }
+
+}
+
+// ---------- button ----------
+.cs-btn-primary {
+  display           : block;
+  padding           : 8px 30px;
+  background-color  : var(--foreignKey);
+  color             : #fff;
+  border-radius     : 45px;
+  -webkit-transition: all 0.3s;
+  transition        : all 0.3s;
+  border            : none;
+  text-decoration   : none;
+  font-size         : 16px;
+  margin-left       : 10px;
+
+  &:hover {
+    background-color: #e69c00;
+  }
+}
+
+// Mobile menu styles
+.cs-mobile-menu-icon {
+  display: none;
+  margin: 0 10px;
+  font-size: 24px;
+  color: #fff;
+  cursor: pointer;
+  
+  &:hover {
+    color: var(--foreignKey);
+  }
+}
+
+.cs-mobile-menu {
+  position: fixed;
+  top: 0;
+  right: -300px;
+  width: 300px;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  transition: right 0.3s ease;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.cs-mobile-menu-open {
+  right: 0;
+}
+
+.cs-mobile-menu-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.cs-mobile-menu-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cs-mobile-text-center {
+  font-size: 18px;
+  color: #fff;
+  padding: 15px 0;
+  text-decoration: none;
+  width: 100%;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  
+  &:hover {
+    color: var(--foreignKey);
+  }
+}
+
+.cs-mobile-btn-primary {
+  margin-top: 20px;
+  padding: 10px 30px;
+  background-color: var(--foreignKey);
+  color: #fff;
+  border-radius: 45px;
+  text-decoration: none;
+  font-size: 16px;
+  text-align: center;
+  width: 80%;
+  
+  &:hover {
+    background-color: #e69c00;
+  }
+}
+
+// Media queries for responsiveness
+@media (max-width: 991px) {
+  .cs-desktop-menu {
+    display: none !important;
+  }
+  
+  .cs-mobile-menu-icon {
+    display: block;
+  }
+  
+  .cs-btn-primary {
+    display: none;
+  }
+  
+  .cs-nav-right {
+    align-items: center;
+  }
+}

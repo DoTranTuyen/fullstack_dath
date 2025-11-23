@@ -1,0 +1,72 @@
+{% import "/apps/web_01/commom/macros.html" as macros %}
+<div class="row">
+    <div class="col-xl-3 col-lg-6 col-md-12 col-xxl-5">
+        <!-- Ảnh sản phẩm -->
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+                <img class="img-fluid rounded" style='width:365px;height:365px;' src="{{ product.image.url }}" alt="{{ product.name }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-9 col-lg-6 col-md-12 col-xxl-7 col-sm-12">
+        <div class="product-detail-content">
+            <div class="new-arrival-content pr">
+                <div class="d-table mb-2">
+                    <p class="price float-start d-block">{{ macros.format_currency(product.price) }}</p>
+                </div>
+                <p><strong>Mô tả:</strong> {{ product.description }}</p>
+              
+               <!--
+                  <p><strong>Tình trạng:</strong> 
+                    <span class="item"> 
+                        {% if product.in_stock > 0 %} Còn hàng {% else %} Hết hàng {% endif %}
+                        <i class="fa fa-shopping-basket"></i>
+                    </span>
+                </p>
+                <p><strong>Số lượng tồn:</strong> {{ product.in_stock }}</p>
+            -->
+            <p><strong>Loại sản phẩm:</strong> {{ product.category.name }}</p>
+
+                <div class="card border">
+                    <div class="card-header p-3">
+                        <h4 class="card-title">Nguyên liệu</h4>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="table-responsive">
+                            <table class="table header-border table-hover verticle-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Tên</th>
+                                        <th>Số lượng cần</th>
+                                        <th>Tồn kho</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in ingredients %}
+                                        <tr>
+                                            <td>
+                                                <span>{{ loop.index }}</span>
+                                            </td>
+                                            <td>
+                                                <span>{{ item.ingredient.name }}</span>
+                                            </td>
+                                            <td>
+                                                <span>{{ item.quantity_required }} {{ item.ingredient.unit }}</span>
+                                            </td>
+                                            <td>
+                                                
+                                                <span>{{ item.ingredient.quantity_in_stock }} {{ item.ingredient.unit }}</span>
+                                        </td>
+                                        </tr>
+                                    {% endfor %}    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

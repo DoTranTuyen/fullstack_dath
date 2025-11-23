@@ -1,0 +1,287 @@
+{% extends '/base/base.html' %}
+{% import "/apps/web_01/commom/macros.html" as macros %}
+{% block body %}
+<div class="row">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Quản lý dịch vụ</h1>
+        <div>
+            <button id="refresh-btn" class="btn btn-info ml-2 btn-sm">
+                <i class="fas fa-sync-alt fa-sm"></i> Làm mới
+            </button>
+        </div>
+    </div>
+
+    <!-- Khu vực quản lý bàn -->
+    <div class="col-md-12">
+        <div class="card border rounded">
+            <div class="card-header text-white">
+                <h5 class="card-title">Sơ Đồ Bàn</h5>
+            </div>
+            <div class="card-body" >
+                <div class="row" id="tableLayout" >
+                    {% for table in table_list %}
+                    <div class="col-md-1 mb-3">
+                        <div class="table-item text-center rounded shadow-sm 
+                                    {% if table.status == 'available' %}table-empty{% else %}table-occupied{% endif %}
+                                    {% if request.GET.get('table','')|string == table.id|string %} active{% endif %}"
+                             draggable="true"
+                             data-table-id="{{ table.id }}">
+                              <i class="fas fa-chair fa-2x text-secondary"></i>
+                            <p class=" mb-0 fw-bold">{{ table.id }}</p>
+                 
+                            {% if table.status == 'available' %}
+                                 <span class="badge badge-xs badge-outline-success">{{ table.get_status_display() }}</span>
+                             {%elif table.status == 'occupied' %}
+                                 <span class="badge badge-xs badge-primary">{{ table.get_status_display() }}</span>
+                             {%else%}
+                                 <span class="badge badge-xs badge-outline-secondary">{{ table.get_status_display() }}</span>
+                             {%endif%}
+                        </div>
+                    </div>
+                    {%endfor%}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Khu vực order -->
+    <div class="col-md-9" id='orderLayout' >
+        <div class="card rounded border">
+        <div class="card-header text-white p-0" style="min-height: 57px;">
+            <ul class="nav nav-tabs" id="orderTabs" role="tablist">
+            </ul>
+        </div>
+        <div class='card-body' >
+            <div class="tab-content tabcontent-border" id="orderContents">
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Khu vực menu -->
+    <div class="col-md-3">
+        <div class="card rounded border">
+            <div class="card-header text-white ">
+                <h5 class="card-title">Menu</h5>
+            </div>
+            <div class="card-body  pt-4">
+                <div class="input-group d-xl-inline-flex d-none mb-3">
+                    <input type="text" class="form-control" id='search-product' placeholder="Search here...">
+                    <button class="input-group-text"><i class="flaticon-381-search-2"></i></button>
+                </div>
+                <div id="productLayout" >
+                    {% for product in product_list %}
+                    <div class="menu-item p-2 border rounded mb-2"
+                    data-product-id="{{ product.id }}" 
+                    data-product-name="{{ product.name }}"
+                    data-product-price="{{ product.price }}"
+                    data-product-image="{{ product.image }}">
+                    
+                   <div class="d-flex justify-content-between align-items-center">
+                       <i class="fas fa-grip-vertical text-muted draggable-product me-3"
+                          draggable="true"
+                          title="Kéo để thêm vào đơn" style="cursor: all-scroll;"></i>
+               
+                       <div class="menu-item d-flex align-items-center justify-content-between w-100 mb-2 p-2 rounded shadow-sm bg-light">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ product.image }}" alt="{{ product.name }}" class="img-fluid me-3 rounded"
+                                 style="width: 50px; height: 50px; object-fit: cover;">
+                            <span class="product-name text-dark">{{ product.name }}</span>
+                        </div>
+                        <strong class="text-secondary">{{ macros.format_currency(product.price) }}</strong>
+                    </div>
+                   </div>
+               </div>
+                        {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+
+    socket.onmessage = function (event) {
+        const data = JSON.parse(event.data);
+        const type = data.type;
+        if(type == 'product_status') {
+        let tableId = "{{request.GET.get('table')}}";
+        let tabId = `tab-${tableId}`;
+        let contentId = `content-${tableId}`;
+        $.ajax({
+            url: "{{ url('web_01:get_order_by_table') }}",
+            type: 'GET',
+            data: { table_id: tableId },
+            success: function(response) {
+                console.log('response',response)
+                $("#orderContents").html(response);
+            },
+            error: function(xhr, errmsg, err) {
+                $("#orderContents").append(`
+                    <div class="tab-pane fade" id="${contentId}" role="tabpanel">
+                        <p class="text-muted">Bàn này chưa có đơn nào.</p>
+                    </div>
+                `);
+            }
+        });
+        }
+
+        const message = data.message;
+        const level = data.level;
+        displayNotification(message, level);
+        load_notification_list();
+    };
+
+
+    function getOrderDetail(tableId) {
+        let tabId = `tab-${tableId}`;
+        let contentId = `content-${tableId}`;
+
+        $.ajax({
+            url: "{{ url('web_01:get_order_by_table') }}",
+            type: 'GET',
+            data: { table_id: tableId },
+            success: function(response) {
+                $("#orderContents").append(`
+                    <div class="tab-pane fade" id="${contentId}" role="tabpanel">
+                        ${response}
+                    </div>
+                `);
+                $(`#${tabId}`).tab('show'); // Kích hoạt tab sau khi thêm nội dung
+            },
+            error: function(xhr, errmsg, err) {
+                $("#orderContents").append(`
+                    <div class="tab-pane fade" id="${contentId}" role="tabpanel">
+                        <p class="text-muted">Bàn này chưa có đơn nào.</p>
+                    </div>
+                `);
+                $(`#${tabId}`).tab('show');
+            }
+        });
+    }
+    function addOrActivateTab(tableId) {
+        let tabId = `tab-${tableId}`;
+        let contentId = `content-${tableId}`;
+         // Kích hoạt tab
+        window.history.replaceState({}, '', `?table=${tableId}`);
+
+        // Nếu tab đã tồn tại, chỉ cần active nó
+        if ($(`#${tabId}`).length > 0) {
+            $(`#${tabId}`).tab('show');
+            return;
+        }
+    
+        // 🔹 Thêm tab mới
+        $("#orderTabs").append(`
+            <li class="nav-item" role="presentation">
+                <a class="nav-link d-flex align-items-center px-2 py-1 small-tab" id="${tabId}" data-table-id="${tableId}" data-bs-toggle="tab" href="#${contentId}" role="tab">
+                    <i class="fas fa-chair me-1"></i> Bàn ${tableId} 
+                    <button class="close-tab btn btn-sm text-danger ms-2">&times;</button>
+                </a>
+            </li>
+        `);
+    
+        // 🔹 Thêm nội dung đơn hàng bằng Ajax
+        $.ajax({
+            url: "{{ url('web_01:get_order_by_table') }}",
+            type: 'GET',
+            data: { table_id: tableId },
+            success: function(response) {
+                $("#orderContents").append(`
+                    <div class="tab-pane fade" id="${contentId}" role="tabpanel">
+                        ${response}
+                    </div>
+                `);
+                $(`#${tabId}`).tab('show'); // Kích hoạt tab sau khi thêm nội dung
+            },
+            error: function(xhr, errmsg, err) {
+                $("#orderContents").append(`
+                    <div class="tab-pane fade" id="${contentId}" role="tabpanel">
+                        <p class="text-muted">Bàn này chưa có đơn nào.</p>
+                    </div>
+                `);
+                $(`#${tabId}`).tab('show');
+            }
+        });
+
+        getOrderDetail(tableId)
+
+        // Xử lý đóng tab
+        $(`#orderTabs`).on("click", `#${tabId} .close-tab`, function (e) {
+            e.stopPropagation();
+            $(`#${tabId}`).parent().remove(); // Xóa tab
+            $(`#${contentId}`).remove(); // Xóa nội dung tab
+    
+            // Nếu còn tab, active tab đầu tiên
+            if ($("#orderTabs li").length > 0) {
+                $("#orderTabs li:first-child a").tab("show");
+            }
+        });
+    }
+
+
+    
+    $(document).ready(function () {
+        loadProductList();
+        var active_table_id = "{{request.GET.get('table','')}}";
+        
+        if(active_table_id) {
+            addOrActivateTab(active_table_id)
+        }
+        function loadProductList() {
+            let url = "{{ url('web_01:get_product_service') }}";
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                success: function (response) {
+                    $("#productLayout").html(response);
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        }
+
+        $('#search-product').on('input', function () {
+            let keyword = $(this).val().trim().toLowerCase();
+        
+            $('#productLayout .menu-item').each(function () {
+                let productName = $(this).find('.product-name').text().trim().toLowerCase();
+                $(this).toggle(productName.includes(keyword));
+            });
+        });
+
+    
+      
+        // Sự kiện click vào bàn
+        $(".table-item").click(function () {
+            let tableId = $(this).data("table-id");
+            $('.table-item').removeClass('active');
+            $(this).addClass('active');
+            addOrActivateTab(tableId);
+        });
+        // Sự kiện click vào bàn
+        $(document).on("click", ".small-tab", function () {
+            let tableId = $(this).data("table-id");
+
+            // Bỏ active của tất cả bàn
+            $(".table-item").removeClass("active");
+
+            // Tìm bàn tương ứng và thêm class "active"
+            $(`.table-item[data-table-id='${tableId}']`).addClass("active");
+        });
+
+        $('#refresh-btn').click(function() {
+            location.reload();
+        });
+    });
+</script>
+{% endblock %}

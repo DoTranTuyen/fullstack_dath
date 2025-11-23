@@ -1,0 +1,305 @@
+{% extends '/base/base.html' %}
+{% import "/apps/web_01/commom/macros.html" as macros %}
+{% block body %}
+<div class="col-lg-12">
+    <!-- Card thống kê nhanh -->
+    <div class="row mb-3" >
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card bg-primary" id='card-1'>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-auto">
+                            <h2 class="text-white font-w600" id="totalIngredients">-</h2>
+                            <p class="text-white mb-0">Tổng nguyên liệu</p>
+                        </div>
+                        <span class="text-white fs-30">
+                            <i class="fas fa-boxes"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card bg-warning" id='card-2'>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-auto">
+                            <h2 class="text-white font-w600" id="lowStockCount">-</h2>
+                            <p class="text-white mb-0">Sắp hết hàng</p>
+                        </div>
+                        <span class="text-white fs-30">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card bg-success" id='card-3'>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-auto">
+                            <h2 class="text-white font-w600" id="importCount">-</h2>
+                            <p class="text-white mb-0">Nhập kho tháng này</p>
+                        </div>
+                        <span class="text-white fs-30">
+                            <i class="fas fa-file-import"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6">
+            <div class="card bg-danger" id='card-4'>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-auto">
+                            <h2 class="text-white font-w600" id="exportCount">-</h2>
+                            <p class="text-white mb-0">Xuất kho tháng này</p>
+                        </div>
+                        <span class="text-white fs-30">
+                            <i class="fas fa-file-export"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card table list-->
+    <div id='data-table-list'>
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Quản lý nguyên liệu</h4>
+                <div class="d-flex">
+                    
+                    {% if is_manager%}
+                    <button class="btn btn-primary btn-sm me-2" type="button" data-bs-toggle="modal" data-bs-target="#addIngredientModal">
+                            <i class="fas fa-plus-circle me-1"></i> Thêm
+                    </button>
+
+                    <button type="button" class="btn btn-success btn-sm me-2" data-bs-toggle="modal" data-bs-target="#importIngredientModal">
+                        <i class="fas fa-file-import me-1"></i> Nhập
+                    </button>
+                    {%endif%}
+                    
+                   
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <!-- Bộ lọc -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Danh mục</label>
+                        <select class="form-select form-select-sm" id="categoryFilter">
+                            <option value="">Tất cả danh mục</option>
+                            {% for ingredient in ingredients %}
+                            <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Trạng thái tồn kho</label>
+                        <select class="form-select form-select-sm" id="stockStatusFilter">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="low">Sắp hết (≤ 10)</option>
+                            <option value="medium">Trung bình (≤ 30)</option>
+                            <option value="good">Đầy đủ (> 30)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-responsive-md" id='table_data'>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Tên nguyên liệu</th>
+                                <th>Số lượng tồn</th>
+                                <th>Đơn vị</th>
+                                <th>Cập nhật gần nhất</th>
+                                <th>Người cập nhật</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% with 
+    modal_id = 'addIngredientModal',
+    modal_title='Thêm nguyên liệu mới',
+    modal_class_size='modal-md',
+    modal_body_tmp = '/apps/web_01/modal/modal_add_ingredient.html'
+  %}
+    {% include '/popup/popup_create.html' %}
+{% endwith %}
+
+{% with 
+    modal_id = 'modalLogInventory',
+    modal_title='Lịch sử nguyên liệu',
+    modal_class_size='modal-xl',
+    modal_body_tmp = '/apps/web_01/modal/modal_detail_inventory_log.html'
+  %}
+    {% include '/popup/popup_create.html' %}
+{% endwith %}
+
+{% with 
+    modal_id = 'importIngredientModal',
+    modal_title='Nhập kho nguyên liệu',
+    modal_class_size='modal-lg',
+    modal_body_tmp = '/apps/web_01/modal/modal_import_ingredient.html'
+  %}
+    {% include '/popup/popup_create.html' %}
+{% endwith %}
+
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Khởi tạo DataTable
+        var table = $('#table_data').DataTable({
+            ...DATATABLE_CONFIG,
+            processing: true,
+            serverSide: true,
+            autoWidth: false,  // Chặn DataTables tự động đặt width cố định
+            responsive: true,
+            ajax: {
+                url: "{{ url('web_01:inventory_list') }}",
+                type: "POST",
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                data: function (d) {
+                    d.category_id = $('#categoryFilter').val();
+                    d.stock_status = $('#stockStatusFilter').val();
+                },
+                beforeSend: function () {
+                    disable_element($('#table_data'));
+                    disable_element($('#card-1'));
+                    disable_element($('#card-2'));
+                    disable_element($('#card-3'));
+                    disable_element($('#card-4'));
+                },
+                complete: function () {
+                    enable_element($('#table_data'));
+                    enable_element($('#card-1'));
+                    enable_element($('#card-2'));
+                    enable_element($('#card-3'));
+                    enable_element($('#card-4'));
+                }
+            },
+            columns: [
+                { data: 'index', title: '#' },
+                { 
+                    data: 'name', 
+                    title: 'Nguyên liệu',
+                    render: function(data, type, row) {
+                        return `<span class="fw-bold">${data}</span>`;
+                    }
+                },
+                { 
+                    data: 'quantity', 
+                    title: 'Tồn kho',
+                    render: function(data, type, row) {
+                        let badgeClass = 'text-success';
+                        if (data <= 10) {
+                            badgeClass = 'text-danger';
+                        } else if (data <= 30) {
+                            badgeClass = 'text-warning';
+                        }
+                        return `<span class="${badgeClass}">${data}</span>`;
+                    }
+                },
+                { data: 'unit', title: 'Đơn vị' },
+                { data: 'latest_update', title: 'Cập nhật gần nhất' },
+                { data: 'latest_user', title: 'Người cập nhật' },
+                {
+                    data: 'id',
+                    title: '',
+                    orderable: false,
+                    render: function (data, type, row, meta) {
+                        return `
+                            <div class="d-flex">
+                                <button class="btn btn-sm btn-info me-1 btn-log " 
+                                    data-id="${row.id}" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalLogInventory">
+                                    <i class="fa fa-history"></i> Log
+                                </button>
+
+                            </div>
+                        `;
+                    }
+                }
+            ],
+            initComplete: function() {
+                // Lấy thống kê tổng quan
+                $.ajax({
+                    url: "{{url('web_01:inventory_dashboard_stats')}}",
+                    type: "GET",
+                    success: function(data) {
+                        $('#totalIngredients').text(data.total_ingredients);
+                        $('#lowStockCount').text(data.low_stock_ingredients);
+                        $('#importCount').text(data.total_import_this_month);
+                        $('#exportCount').text(data.total_export_this_month);
+                    }
+                });
+            },
+            columnDefs: [
+                { orderable: false, targets: [1,5] },
+            ]
+        });
+        
+        // Xử lý sự kiện khi thay đổi bộ lọc
+        $('#categoryFilter, #stockStatusFilter').change(function() {
+            table.ajax.reload();
+        });
+        
+        // Xử lý sự kiện khi click vào nút log
+        $(document).on('click', '.btn-log', function() {
+            const ingredientId = $(this).data('id');
+            $.ajax({
+                url: "inventory_log_list" + ingredientId,
+                type: "GET",
+                success: function(response) {
+                    $('#modalLogInventory .modal-body').html(response);
+                }
+            });
+        });
+        
+        // Xử lý sự kiện khi click vào nút nhập kho cho một nguyên liệu
+        $(document).on('click', '.btn-import-single', function(e) {
+            e.preventDefault();
+            const ingredientId = $(this).data('id');
+            const ingredientName = $(this).data('name');
+            
+            $('#importIngredientModal').modal('show');
+            // Thêm logic để chọn sẵn nguyên liệu trong form nhập kho
+            setTimeout(function() {
+                $('#importIngredientModal select[name="ingredient[]"]').val(ingredientId).trigger('change');
+            }, 500);
+        });
+        
+        // Xử lý sự kiện khi click vào nút xuất kho cho một nguyên liệu
+        $(document).on('click', '.btn-export-single', function(e) {
+            e.preventDefault();
+            const ingredientId = $(this).data('id');
+            const ingredientName = $(this).data('name');
+            
+            $('#exportIngredientModal').modal('show');
+            // Thêm logic để chọn sẵn nguyên liệu trong form xuất kho
+            setTimeout(function() {
+                $('#exportIngredientModal select[name="ingredient[]"]').val(ingredientId).trigger('change');
+            }, 500);
+        });
+    });
+</script>
+{% endblock %}

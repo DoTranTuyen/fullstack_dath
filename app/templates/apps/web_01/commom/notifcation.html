@@ -1,0 +1,291 @@
+<div class="notification-header d-flex justify-content-between align-items-center p-3 border-bottom">
+    <h6 class="mb-0">Thông báo</h6>
+    <button id="mark-all-read" class="btn btn-sm btn-link text-primary">
+        <i class="fas fa-check-double"></i> Đánh dấu tất cả đã đọc
+    </button>
+</div>
+
+<div class="notification-scroll">
+    <ul class="timeline notification-timeline-mini">
+        {% for notif in notifications %}
+            <li class="timeline-item {% if not notif.is_read %}unread{% endif %}" data-id="{{ notif.id }}">
+                <div class="timeline-panel border-start
+                    {% if notif.type == 'order_status' %} border-primary
+                    {% elif notif.type == 'promotion' %} border-success
+                    {% elif notif.type == 'reminder' %} border-warning
+                    {% elif notif.type == 'payment' %} border-info
+                    {% elif notif.type == 'required_payment_cash' %} border-danger
+                    {% else %} border-secondary
+                    {% endif %}">
+                    
+                    <div class="d-flex align-items-center">
+                        <div class="notification-icon mx-2">
+                            {% if notif.type == 'order_status' %}
+                                <div class="avatar avatar-sm bg-primary-light rounded-circle">
+                                    <i class="fas fa-utensils text-primary"></i>
+                                </div>
+                            {% elif notif.type == 'promotion' %}
+                                <div class="avatar avatar-sm bg-success-light rounded-circle">
+                                    <i class="fas fa-gift text-success"></i>
+                                </div>
+                            {% elif notif.type == 'reminder' %}
+                                <div class="avatar avatar-sm bg-warning-light rounded-circle">
+                                    <i class="fas fa-bell text-warning"></i>
+                                </div>
+                            {% elif notif.type == 'payment' %}
+                                <div class="avatar avatar-sm bg-info-light rounded-circle">
+                                    <i class="fas fa-money-bill-wave text-info"></i>
+                                </div>
+                            {% elif notif.type == 'required_payment_cash' %}
+                                <div class="avatar avatar-sm bg-danger-light rounded-circle">
+                                    <i class="fas fa-hand-holding-usd text-danger"></i>
+                                </div>
+                            {% elif notif.type == 'session' %}
+                                <div class="avatar avatar-sm bg-secondary-light rounded-circle">
+                                    <i class="fas fa-door-closed text-secondary"></i>
+                                </div>
+                            {% else %}
+                                <div class="avatar avatar-sm bg-secondary-light rounded-circle">
+                                    <i class="fas fa-info-circle text-secondary"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fs-14">{{ notif.message|safe }}</h6>
+                            <small class="d-block text-muted">
+                                <i class="fa-regular fa-clock"></i> {{ notif.created_at.strftime('%d/%m/%Y %H:%M') }}
+                            </small>
+                        </div>
+                        {% if not notif.is_read %}
+                            <div class="notification-status">
+                                <span class="badge bg-primary rounded-circle"></span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+<style>
+    .notification-dropdown {
+        width: 350px;
+        max-width: 100vw;
+        padding: 0;
+    }
+    
+    .notification-scroll {
+        max-height: 380px;
+        overflow-y: auto;
+    }
+    
+    .notification-timeline-mini {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .timeline-item {
+        background-color: rgba(13, 110, 253, 0.05);
+        border-radius: 0.5rem;
+        padding: 10px 5px;
+        margin-bottom: 8px;
+        transition: background-color 0.3s ease;
+    }
+    
+    .timeline-item:hover {
+        background-color: rgba(13, 110, 253, 0.08);
+        cursor: pointer;
+    }
+    
+    .timeline-item.unread {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+    
+    .timeline-item.read-processing {
+        opacity: 0.7;
+    }
+    
+    .timeline-panel {
+        border-left-width: 3px !important;
+    }
+    
+    .notification-icon .avatar {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .notification-status .badge {
+        width: 8px;
+        height: 8px;
+        padding: 0;
+    }
+    
+    .all-notification {
+        display: block;
+        padding: 10px;
+        text-align: center;
+        background-color: #f8f9fa;
+        color: #495057;
+        text-decoration: none;
+        border-top: 1px solid #e9ecef;
+        transition: all 0.2s ease;
+    }
+    
+    .all-notification:hover {
+        background-color: #e9ecef;
+        color: #0d6efd;
+    }
+    
+    /* Animation for new notifications */
+    @keyframes newNotification {
+        0% { background-color: rgba(13, 110, 253, 0.1); }
+        100% { background-color: transparent; }
+    }
+    
+    .new-notification {
+        animation: newNotification 2s ease;
+    }
+    
+    /* Nút đánh dấu tất cả đã đọc */
+    #mark-all-read {
+        font-size: 0.8rem;
+        padding: 0;
+    }
+    
+    #mark-all-read:hover {
+        text-decoration: underline;
+    }
+    
+    /* Empty state */
+    .notification-empty {
+        padding: 30px 20px;
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .notification-empty i {
+        font-size: 40px;
+        margin-bottom: 10px;
+        opacity: 0.5;
+    }
+</style>
+
+{% block script%}
+<script>
+    $(document).ready(function () {
+        // Xử lý click vào thông báo
+        $(document).on('click', '.timeline-item', function (e) {
+            const $notificationItem = $(this);
+            const notificationId = $notificationItem.data('id');
+    
+            if (!$notificationItem.hasClass('read-processing') && $notificationItem.hasClass('unread')) {
+                markNotificationAsRead(notificationId, $notificationItem);
+            }
+    
+            // Có thể xử lý chuyển hướng tại đây nếu cần
+            // window.location.href = '/notification-detail/' + notificationId;
+        });
+    
+        // Nút đánh dấu tất cả đã đọc
+        $('#mark-all-read').on('click', function (e) {
+            e.preventDefault();
+            markAllNotificationsAsRead();
+        });
+    });
+    
+    // Hàm đánh dấu một thông báo đã đọc
+    function markNotificationAsRead(notificationId, $notificationItem) {
+        $notificationItem.addClass('read-processing');
+    
+        const csrftoken = getCookie('csrftoken');
+    
+        $.ajax({
+            url: '/mark-notification-read/',
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+            contentType: 'application/json',
+            data: JSON.stringify({ notification_id: notificationId }),
+            success: function (data) {
+                if (data.status === 'success') {
+                    $notificationItem.removeClass('unread');
+                    $notificationItem.find('.notification-status').remove();
+                    updateNotificationCount();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Lỗi khi đánh dấu thông báo đã đọc:', error);
+            },
+            complete: function () {
+                $notificationItem.removeClass('read-processing');
+            }
+        });
+    }
+    
+    // Hàm đánh dấu tất cả thông báo đã đọc
+    function markAllNotificationsAsRead() {
+        const csrftoken = getCookie('csrftoken');
+    
+        $.ajax({
+            url: '/mark-notification-read/',
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+            contentType: 'application/json',
+            data: JSON.stringify({ mark_all: true }),
+            success: function (data) {
+                if (data.status === 'success') {
+                    $('.timeline-item.unread').each(function () {
+                        $(this).removeClass('unread');
+                        $(this).find('.notification-status').remove();
+                    });
+    
+                    updateNotificationCount(0);
+                    load_notification_list();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Lỗi khi đánh dấu tất cả thông báo đã đọc:', error);
+            }
+        });
+    }
+    
+    // Hàm cập nhật số lượng thông báo chưa đọc
+    function updateNotificationCount(count = null) {
+        const $notificationCountElement = $('#notification-count');
+    
+        if ($notificationCountElement.length) {
+            if (count !== null) {
+                $notificationCountElement.text(count);
+                $notificationCountElement.toggle(count > 0);
+            } else {
+                let currentCount = parseInt($notificationCountElement.text());
+                if (!isNaN(currentCount) && currentCount > 0) {
+                    currentCount--;
+                    $notificationCountElement.text(currentCount);
+                    $notificationCountElement.toggle(currentCount > 0);
+                }
+            }
+        }
+    }
+    
+    // Hàm lấy CSRF token từ cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = $.trim(cookies[i]);
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+</script>
+{% endblock %}
