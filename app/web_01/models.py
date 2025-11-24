@@ -17,15 +17,15 @@ from datetime import datetime
 class BaseModel(models.Model):
     # Trường kiểu DateTimeField, tự động thêm thời gian tạo khi tạo instance mới.
     # Tham số null=True cho phép trường này nhận giá trị NULL trong cơ sở dữ liệu.
-    created_at = models.DateTimeField(verbose_name='created_at', null=True, auto_now_add=True)
+    created_at = models.DateTimeField(verbose_name='created_at', null=True, auto_now_add=True,db_column="ngay_tao")
 
     # Trường kiểu DateTimeField, tự động cập nhật thời gian khi instance được lưu.
     # Tham số null=True cho phép trường này nhận giá trị NULL trong cơ sở dữ liệu.
-    updated_at = models.DateTimeField(verbose_name='updated_at', null=True, auto_now=True)
+    updated_at = models.DateTimeField(verbose_name='updated_at', null=True, auto_now=True,db_column="ngay_cap_nhat")
 
     # Trường kiểu BooleanField để biểu diễn trạng thái xóa (soft delete) của instance.
     # Mặc định không xóa (False).
-    is_deleted = models.BooleanField(verbose_name='is_deleted', default=False)
+    is_deleted = models.BooleanField(verbose_name='is_deleted', default=False,db_column="da_xoa")
 
     class Meta:
         # Khai báo class này là một abstract base class.
@@ -39,17 +39,17 @@ class BaseModel(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(null=True, blank=True)
-    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
-    status = models.CharField(max_length=10, choices=STATUS_ACTIVE_CHOICES, default='active')
+    name = models.CharField(max_length=100, unique=True,db_column="ten_loai_san_pham")
+    description = models.TextField(null=True, blank=True,db_column="mo_ta")
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL,db_column="cha_loai_san_pham")
+    status = models.CharField(max_length=10, choices=STATUS_ACTIVE_CHOICES, default='active',db_column="trang_thai")
 
 # 🔄 Model Product (Sản phẩm)
     class Meta:
         # Khai báo class này là một abstract base class.
         # Các trường của nó sẽ được thêm vào các model kế thừa từ class này,
         # nhưng chính nó sẽ không tạo một bảng riêng trong cơ sở dữ liệu.
-        db_table = 'category'
+        db_table = 'loai_san_pham'
 
     def __str__(self) -> str:
         return f'{self.name}'
@@ -76,12 +76,12 @@ class Ingredient(models.Model):
         ('quả', 'Quả'),
     ]
 
-    name = models.CharField(max_length=100, unique=True)
-    unit = models.CharField(max_length=5, choices=UNIT_CHOICES)
-    quantity_in_stock = models.IntegerField(default=0)  # 🔄 Số lượng tồn kho
+    name = models.CharField(max_length=100, unique=True,db_column="ten_nguyen_lieu")
+    unit = models.CharField(max_length=5, choices=UNIT_CHOICES,db_column="don_vi_tinh")
+    quantity_in_stock = models.IntegerField(default=0,db_column="so_luong_ton")  # 🔄 Số lượng tồn kho
 
     class Meta:
-        db_table = 'ingredient'
+        db_table = 'nguyenlieu'
 
     def __str__(self) -> str:
         return f'{self.name}'
@@ -103,17 +103,17 @@ class InventoryLog(models.Model):
         ('adjustment', 'Điều chỉnh'),
     ]
 
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    change = models.IntegerField()  # (+ nhập, - xuất)
-    type = models.CharField(max_length=15, choices=TYPE_CHOICES)
-    note = models.TextField(null=True, blank=True)
-    last_updated = models.DateTimeField(auto_now_add=True)
-    stock_before = models.IntegerField(null=True, blank=True)  # 🆕 thêm
-    stock_after = models.IntegerField(null=True, blank=True)   # đã có
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE,db_column="ma_nguyen_lieu")
+    change = models.IntegerField(db_column="so_luong_thay_doi")  # (+ nhập, - xuất)
+    type = models.CharField(max_length=15, choices=TYPE_CHOICES,db_column="loai_thay_doi")
+    note = models.TextField(null=True, blank=True,db_column="ghi_chu")
+    last_updated = models.DateTimeField(auto_now_add=True,db_column="thoi_gian_cap_nhat")
+    stock_before = models.IntegerField(null=True, blank=True,db_column="so_luong_truoc")  # 🆕 thêm
+    stock_after = models.IntegerField(null=True, blank=True,db_column="so_luong_sau")   # đã có
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,db_column="ma_nguoi_dung")
 
     class Meta:
-        db_table = 'inventory_log'
+        db_table = 'phieunhap_xuat'
         ordering = ['-last_updated']
 
     def save(self, *args, **kwargs):
@@ -129,16 +129,16 @@ class InventoryLog(models.Model):
 
 
 class Product(BaseModel):
-    name = models.CharField(max_length=100)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    price = models.IntegerField()
-    description = models.TextField(null=True, blank=True)
-    image = CloudinaryField('image', null=True, blank=True)
+    name = models.CharField(max_length=100,db_column="ten_san_pham")
+    category = models.ForeignKey(Category, on_delete=models.CASCADE,db_column="ma_loai_san_pham")
+    price = models.IntegerField(db_column="gia")
+    description = models.TextField(null=True, blank=True,db_column="mo_ta")
+    image = CloudinaryField('image', null=True, blank=True,db_column="hinh_anh")
     ingredients = models.ManyToManyField(Ingredient, through='IngredientProduct', blank=True, null=True)
-    status = models.CharField(max_length=10, choices=STATUS_ACTIVE_CHOICES, default='active')
+    status = models.CharField(max_length=10, choices=STATUS_ACTIVE_CHOICES, default='active',db_column="trang_thai")
 
     class Meta:
-        db_table = 'product'
+        db_table = 'sanpham'
         ordering = ['-created_at']
 
     @cached_property
@@ -161,21 +161,21 @@ class Product(BaseModel):
 
 
 class IngredientProduct(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    quantity_required = models.IntegerField()
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,db_column="ma_san_pham")
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE,db_column="ma_nguyen_lieu")
+    quantity_required = models.IntegerField(db_column="so_luong_can")
 
     class Meta:
-        db_table = 'ingredient_product'
+        db_table = 'congthuc_sanpham'
 
 
 class Customer(BaseModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
-    loyalty_points = models.IntegerField()
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True,db_column="ma_nguoi_dung")
+    loyalty_points = models.IntegerField(db_column="diem_tich_luy")
 
 # 🔄 Model Employee
     class Meta:
-        db_table = 'customer'
+        db_table = 'khachhang'
 
 
 class Employee(BaseModel):
@@ -185,13 +185,13 @@ class Employee(BaseModel):
         ('staff', 'Staff'),
         ('chef', 'Chef'),
     ]
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    salary = models.IntegerField()
-    avartar_url = CloudinaryField('avartar_url', null=True, blank=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='staff')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True,db_column="ma_nguoi_dung")
+    salary = models.IntegerField(db_column="luong")
+    avartar_url = CloudinaryField('avartar_url', null=True, blank=True,db_column="anh_dai_dien")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='staff',db_column="vai_tro")
 
     class Meta:
-        db_table = 'employee'
+        db_table = 'nhanvien'
 
 
 class WorkShift(BaseModel):
@@ -202,15 +202,15 @@ class WorkShift(BaseModel):
         ('allday', 'Cả Ngày')
     ]
 
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name="workshifts")
-    date = models.DateField()
-    shift_type = models.CharField(max_length=10, choices=SHIFT_TYPE_CHOICES)
-    time_start = models.DateTimeField(blank=True, null=True)
-    time_end = models.DateTimeField(blank=True, null=True)
-    notes = models.TextField(blank=True, null=True)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name="workshifts",db_column="ma_nhan_vien")
+    date = models.DateField(db_column="ngay")
+    shift_type = models.CharField(max_length=10, choices=SHIFT_TYPE_CHOICES,db_column="loai_ca")
+    time_start = models.DateTimeField(blank=True, null=True,db_column="thoi_gian_bat_dau")
+    time_end = models.DateTimeField(blank=True, null=True,db_column="thoi_gian_ket_thuc")
+    notes = models.TextField(blank=True, null=True,db_column="ghi_chu")
 
     class Meta:
-        db_table = 'work_shift'
+        db_table = 'phancong_ca'
         unique_together = ('employee', 'date', 'shift_type')
 
     def __str__(self):
@@ -224,16 +224,16 @@ class ShiftRegistration(models.Model):
         ('rejected', 'Từ chối')
     ]
 
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name="shift_registrations")
-    date = models.DateField()
-    shift_type = models.CharField(max_length=10, choices=WorkShift.SHIFT_TYPE_CHOICES)
-    is_off = models.BooleanField(default=False)
-    reason = models.TextField(blank=True, null=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    created_at = models.DateTimeField(auto_now_add=True)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name="shift_registrations",db_column="ma_nhan_vien")
+    date = models.DateField(db_column="ngay_dang_ky")
+    shift_type = models.CharField(max_length=10, choices=WorkShift.SHIFT_TYPE_CHOICES,db_column="loai_ca")
+    is_off = models.BooleanField(default=False,db_column="xin_nghi")
+    reason = models.TextField(blank=True, null=True,db_column="ly_do")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending',db_column="trang_thai")
+    created_at = models.DateTimeField(auto_now_add=True,db_column="ngay_tao")
 
     class Meta:
-        db_table = 'shift_registration'
+        db_table = 'dangky_ca'
         unique_together = ('employee', 'date', 'shift_type')
 
     def __str__(self):
@@ -245,14 +245,14 @@ class ShiftRegistration(models.Model):
 
 
 class Table(models.Model):
-    table_number = models.IntegerField(unique=True)
-    status = models.CharField(max_length=10, choices=[('available', 'Trống'), ('occupied', 'Sử dụng'), ('reserved', 'Đã đặt')], default='available')
-    qr_image = CloudinaryField('image')
-    capacity = models.IntegerField(default=4)  # Thêm trường capacity
-    is_deleted = models.BooleanField(default=False)
+    table_number = models.IntegerField(unique=True,db_column="so_ban")
+    status = models.CharField(max_length=10, choices=[('available', 'Trống'), ('occupied', 'Sử dụng'), ('reserved', 'Đã đặt')], default='available',db_column="trang_thai")
+    qr_image = CloudinaryField('image',db_column="anh_qr")
+    capacity = models.IntegerField(default=4,db_column="suc_chua")  # Thêm trường capacity
+    is_deleted = models.BooleanField(default=False,db_column="da_xoa")
 
     class Meta:
-        db_table = 'table'
+        db_table = 'ban_an'
     # 🔄 Model Ingredient
     # 🔄 Override phương thức save()
 
@@ -285,17 +285,17 @@ class Session(models.Model):
         ('active', 'Active'),
         ('closed', 'Closed'),
     ]
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    table = models.ForeignKey(Table, on_delete=models.CASCADE)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
-    started_at = models.DateTimeField(auto_now_add=True)
-    ended_at = models.DateTimeField(null=True, blank=True)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE,db_column="ma_khach_hang")
+    table = models.ForeignKey(Table, on_delete=models.CASCADE,db_column="ma_ban")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active',db_column="trang_thai")
+    started_at = models.DateTimeField(auto_now_add=True,db_column="thoi_gian_bat_dau")
+    ended_at = models.DateTimeField(null=True, blank=True,db_column="thoi_gian_ket_thuc")
 
     def __str__(self):
         return f"Session {self.id} - {self.customer} - {self.table} ({self.status})"
 
     class Meta:
-        db_table = 'session'
+        db_table = 'phienphucvu'
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -318,13 +318,14 @@ class Session(models.Model):
         super().save(*args, **kwargs)
 
 class Invoice(BaseModel):
-    session = models.ForeignKey(Session, on_delete=models.CASCADE)
-    payment_method = models.CharField(max_length=15, choices=[('cash', 'Tiền mặt'), ('bank_transfer', 'Chuyển khoản'), ('momo', 'Momo')], null=True, blank=True)
-    total_amount = models.IntegerField(default=0)
-    discount = models.IntegerField(default=0)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE,db_column="ma_phien_phuc_vu")
+    payment_method = models.CharField(max_length=15, choices=[('cash', 'Tiền mặt'), ('bank_transfer', 'Chuyển khoản'), ('momo', 'Momo')], null=True, blank=True
+                                      ,db_column="phuong_thuc_thanh_toan")
+    total_amount = models.IntegerField(default=0,db_column="tong_tien")
+    discount = models.IntegerField(default=0,db_column="giam_gia")
 
     class Meta:
-        db_table = 'invoice'
+        db_table = 'hoadon'
 # 🔄 Model Order
 
     @cached_property
@@ -333,18 +334,18 @@ class Invoice(BaseModel):
 
 
 class Order(BaseModel):
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE,db_column="ma_hoa_don")
     status = models.CharField(max_length=15, choices=[
         ('pending', 'Chờ'),
         ('in_progress', 'Đang làm'),
         ('completed', 'Hoàn thành'),
         ('cancelled', 'Hủy')
-    ], default='pending')
-    total = models.IntegerField(default=0)
-    discount = models.IntegerField(default=0)
+    ], default='pending',db_column="trang_thai")
+    total = models.IntegerField(default=0,db_column="tong_tien")
+    discount = models.IntegerField(default=0,db_column="giam_gia")
 
     class Meta:
-        db_table = 'order'
+        db_table = 'donhang'
 
     @cached_property
     def formatted_price(self) -> str:
@@ -352,20 +353,20 @@ class Order(BaseModel):
 
 
 class OrderDetail(BaseModel):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    price = models.IntegerField()  # Giá của từng sản phẩm
-    total = models.IntegerField()  # Tổng tiền của từng dòng sản phẩm (quantity * price)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE,db_column="ma_don_hang")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,db_column="ma_san_pham")
+    quantity = models.IntegerField(db_column="so_luong")
+    price = models.IntegerField(db_column="gia")  # Giá của từng sản phẩm
+    total = models.IntegerField(db_column="thanh_tien")  # Tổng tiền của từng dòng sản phẩm (quantity * price)
     status = models.CharField(max_length=15, choices=[
         ('pending', 'Chờ'),
         ('in_progress', 'Đang làm'),
         ('completed', 'Hoàn thành'),
         ('cancelled', 'Hủy')
-    ], default='pending')  # Trạng thái của từng món
+    ], default='pending',db_column="trang_thai")  # Trạng thái của từng món
 
     class Meta:
-        db_table = 'order_detail'
+        db_table = 'donhang_chitiet'
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -400,39 +401,42 @@ class OrderDetail(BaseModel):
 
 
 class Cart(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE,db_column="ma_khach_hang")
 
     class Meta:
-        db_table = 'cart'
+        db_table = 'giohang'
 
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=1)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE,db_column="ma_gio_hang")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,db_column="ma_san_pham")
+    quantity = models.IntegerField(default=1,db_column="so_luong")
 
     class Meta:
-        db_table = 'cart_item'
+        db_table = 'giohang_chitiet'
 
 # 🔄 Model Notification
 
 
 class Notification(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    message = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE,db_column="ma_nguoi_dung")
+    message = models.TextField(db_column="noi_dung")
     type = models.CharField(
-        max_length=50
+        max_length=50,
+        db_column="loai_thong_bao"
     )
     status = models.CharField(
         max_length=10,
         choices=[('read', 'Read'), ('unread', 'Unread')],
-        default='unread'
+        default='unread',
+        db_column="trang_thai"
     )
-    is_read = models.BooleanField(default=False)
-    data = models.JSONField(blank=True, null=True)  # 👈 Thêm JSON field
+    is_read = models.BooleanField(default=False,
+                                  db_column="da_doc")
+    data = models.JSONField(blank=True, null=True,db_column="du_lieu_json")  # 👈 Thêm JSON field
 
     class Meta:
-        db_table = 'notification'
+        db_table = 'thong_bao' # Đổi tên bảng
         ordering = ['-created_at']
 
     def __str__(self):
@@ -442,21 +446,21 @@ class Notification(BaseModel):
 
 
 class Comment(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    content = models.TextField(null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE,db_column="ma_nguoi_dung")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,db_column="ma_san_pham")
+    content = models.TextField(null=True, blank=True,db_column="noi_dung")
 
     class Meta:
-        db_table = 'comment'
+        db_table = 'binhluan'
 
 
 class Rating(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    score = models.IntegerField(choices=[(i, f"{i} Stars") for i in range(1, 6)], null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE,db_column="ma_nguoi_dung")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,db_column="ma_san_pham")
+    score = models.IntegerField(choices=[(i, f"{i} Stars") for i in range(1, 6)], null=True, blank=True,db_column="diem_so")
 
     class Meta:
-        db_table = 'rating'
+        db_table = 'danhgia'
 
 
 class BestSellingProduct(models.Model):
@@ -473,13 +477,13 @@ class BestSellingProduct(models.Model):
         Ngày tạo báo cáo (có thể là ngày, tuần, tháng hoặc năm).
 
     """
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    sold_quantity = models.IntegerField()
-    report_date = models.DateTimeField()
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,db_column="ma_san_pham")
+    sold_quantity = models.IntegerField(db_column="so_luong_da_ban")
+    report_date = models.DateTimeField(db_column="ngay_bao_cao")
 
     class Meta:
 
-        db_table = 'best_selling_product'
+        db_table = 'sanpham_banchay'
 
 
 class TableReservation(models.Model):
@@ -490,31 +494,31 @@ class TableReservation(models.Model):
         ('completed', 'Đã hoàn thành'),
     ]
 
-    name = models.CharField(max_length=100)
-    phone_number = models.CharField(max_length=15)
-    many_person = models.IntegerField()
-    table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name='reservations', null=True, blank=True)
+    name = models.CharField(max_length=100,db_column="ten_khach_hang")
+    phone_number = models.CharField(max_length=15,db_column="so_dien_thoai")
+    many_person = models.IntegerField(db_column="so_nguoi")
+    table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name='reservations', null=True, blank=True,db_column="ma_ban")
 
-    date = models.DateField(null=False)  # Ngày đặt bàn
-    hour = models.TimeField(null=False)  # Giờ đặt bàn
+    date = models.DateField(null=False,db_column="ngay_dat")  # Ngày đặt bàn
+    hour = models.TimeField(null=False,db_column="gio_dat")  # Giờ đặt bàn
 
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending',db_column="trang_thai")
+    created_at = models.DateTimeField(auto_now_add=True,db_column="ngay_tao")
 
     def __str__(self):
         return f"{self.name} - Bàn {self.table.table_number} ({self.date} {self.hour})"
 
     class Meta:
-        db_table = 'table_reservation'
+        db_table = 'datban'
 
 
 class ChatHistory(models.Model):
-    user_message = models.TextField()  # Tin nhắn người dùng
-    bot_reply = models.TextField()  # Phản hồi của chatbot
-    created_at = models.DateTimeField(auto_now_add=True)  # Thời gian gửi tin nhắn
+    user_message = models.TextField(db_column="tin_nhan_nguoi_dung")  # Tin nhắn người dùng
+    bot_reply = models.TextField(db_column="tin_nhan_bot")  # Phản hồi của chatbot
+    created_at = models.DateTimeField(auto_now_add=True,db_column="thoi_gian_tao")  # Thời gian gửi tin nhắn
 
     def __str__(self):
         return f"User: {self.user_message[:20]}... | Bot: {self.bot_reply[:20]}..."
 
     class Meta:
-        db_table = 'chat_history'
+        db_table = 'lichsu_tinnhan'
