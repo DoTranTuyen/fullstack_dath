@@ -99,82 +99,12 @@ Doanh thu tuần này hơi chững, chắc khách bận đi xem phim mới. Món
 Bot RMS
 """
 
-        
-        self.team_members = [
-            {
-                'name': "Nguyễn Viết Tài",
-                'role': "Product Owner & Scrum Master",
-                'image_url': "/static/members/nguyen_viet_tai.png"
-            },
-            {
-                'name': "Lê Công Anh",
-                'role': "Member",
-                'image_url': "/static/members/le_cong_an.png"
-            },
-            {
-                'name': "Phạm Nguyễn Trường Ân",
-                'role': "Member",
-                'image_url': "/static/members/truong_an.png"
-            },
-            {
-                'name': "Phạm Quốc Hoàng",
-                'role': "Member",
-                'image_url': "/static/members/quoc_hoang.png"
-            },
-            {
-                'name': "Trần Châu Phú",
-                'role': "Member",
-                'image_url': "/static/members/chau_phu.png"
-            }
-        ]
-        self.mentor = {
-            'name': "Nguyễn Minh Nhật",
-            'title': "Giảng viên Khoa CNTT – ĐH Duy Tân",
-            'email': "nhatnm2010@gmail.com",
-            'image_url': "/static/members/minh_nhat.png"
-        }
-        
         # Khởi tạo chat history
         self.chat = self.model.start_chat(history=[])
 
         # Tải lịch sử chat gần đây để học
         self.load_recent_chat_history()
 
-    def get_team_info(self, query_type="team", member_name=None):
-        """Lấy thông tin về đội ngũ hoặc mentor"""
-        if query_type == "team":
-            team_table = "| STT | Tên thành viên | Vai trò | Hình ảnh |\n|-----|----------------|---------|---------|\n"
-            for idx, member in enumerate(self.team_members, 1):
-                image_md = f'<img src="{member["image_url"]}" alt="{member["name"]}" style="width:50px;height:50px;border-radius:8px;" />' if member['image_url'] else "Không có hình"
-                team_table += f"| {idx} | {member['name']} | **{member['role']}** | {image_md} |\n"
-            return {
-                'title': "Đội Ngũ Phát Triển",
-                'summary': f"Nhóm 65 với **{len(self.team_members)}** thành viên, đoàn kết như nồi lẩu thập cẩm!",
-                'details': team_table
-            }
-        elif query_type == "member" and member_name:
-            member = next((m for m in self.team_members if member_name.lower() in m['name'].lower()), None)
-            if member:
-                image_md = f'<img src="{member["image_url"]}" alt="{member["name"]}" style="width:50px;height:50px;border-radius:8px;" />' if member['image_url'] else "Không có hình"
-                return {
-                    'title': f"Thông Tin {member['name']}",
-                    'summary': f"{member['name']} là **{member['role']}**, một đầu bếp ngôi sao trong Nhóm 65!",
-                    'details': f"- **Tên**: {member['name']}  \n- **Vai trò**: **{member['role']}**  \n- **Hình ảnh**: {image_md}"
-                }
-            else:
-                return {
-                    'title': "Không Tìm Thấy Thành Viên",
-                    'summary': f"Ôi, '{member_name}' không có trong đội, hay là khách VIP gọi món đặc biệt?",
-                    'details': "Hãy thử hỏi về 'thành viên' để xem danh sách cả nhóm!"
-                }
-        elif query_type == "mentor":
-            image_md = f'<img src="{self.mentor["image_url"]}" alt="{self.mentor["name"]}" style="width:50px;height:50px;border-radius:8px;" />' if self.mentor['image_url'] else "Không có hình"
-            return {
-                'title': "Thông Tin Mentor",
-                'summary': f"{self.mentor['name']} là mentor dẫn dắt Nhóm 65, như đầu bếp trưởng trong nhà hàng 5 sao!",
-                'details': f"- **Tên**: {self.mentor['name']}  \n- **Chức danh**: **{self.mentor['title']}**  \n- **Email**: {self.mentor['email']}  \n- **Hình ảnh**: {image_md}"
-            }
-        return {}
     
     def load_recent_chat_history(self):
         """Tải lịch sử chat gần đây để học"""
@@ -590,58 +520,6 @@ Bot RMS
 
 *Dữ liệu được cập nhật vào {timezone.now().strftime('%d/%m/%Y %H:%M')}*
 """
-        elif "thành viên" in user_message_lower or "đội ngũ" in user_message_lower:
-            team_data = self.get_team_info(query_type="team")
-            context = f"""
-# {team_data['title']}
-
-{team_data['summary']}
-
-## Danh Sách Thành Viên
-{team_data['details']}
-
-## Nhận xét & Đề xuất
-- **Nhận xét**: Đội ngũ Nhóm 65 chăm chỉ hơn cả nhân viên chạy bàn giờ cao điểm!  
-- **Đề xuất**: Gửi lời cảm ơn đến họ vì đã tạo ra tôi, Bot RMS siêu xịn!
-
-*Dữ liệu được cập nhật vào {timezone.now().strftime('%d/%m/%Y %H:%M')}*
-"""
-        elif "mentor" in user_message_lower or "nguyễn minh nhật" in user_message_lower:
-            mentor_data = self.get_team_info(query_type="mentor")
-            context = f"""
-# {mentor_data['title']}
-
-{mentor_data['summary']}
-
-## Chi Tiết Mentor
-{mentor_data['details']}
-
-## Nhận xét & Đề xuất
-- **Nhận xét**: {self.mentor['name']} dẫn dắt nhóm như GPS trong nhà hàng đông đúc!  
-- **Đề xuất**: Gửi email đến {self.mentor['email']} để cảm ơn sự hướng dẫn!
-
-*Dữ liệu được cập nhật vào {timezone.now().strftime('%d/%m/%Y %H:%M')}*
-"""
-        elif any(member['name'].lower() in user_message_lower for member in self.team_members):
-            for member in self.team_members:
-                if member['name'].lower() in user_message_lower:
-                    member_data = self.get_team_info(query_type="member", member_name=member['name'])
-                    context = f"""
-# {member_data['title']}
-
-{member_data['summary']}
-
-## Chi Tiết Thành Viên
-{member_data['details']}
-
-## Nhận xét & Đề xuất
-- **Nhận xét**: {member['name']} là một phần không thể thiếu, như muối trong món phở!  
-- **Đề xuất**: Khen ngợi {member['name']} vì đã góp phần tạo nên Bot RMS!
-
-*Dữ liệu được cập nhật vào {timezone.now().strftime('%d/%m/%Y %H:%M')}*
-"""
-                    break
-                
         else:
             # Trường hợp không xác định được ý định cụ thể
             context = """
