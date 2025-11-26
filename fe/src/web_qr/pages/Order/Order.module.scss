@@ -21,15 +21,6 @@
         border-radius: 10px;
     }
 
-    .cs-title {
-        transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
-
-        [data-theme="light"] & {
-            color: black !important; // Khi Light Mode, đổi thành đen
-
-        }
-    }
-
     .order-item {
         display: flex;
         align-items: center;
@@ -259,21 +250,16 @@
     }
 
     .cs-title {
-
         margin-left: 200px;
         width: 300px;
         margin-top: 20px;
-
-        @media (max-width: 768px) {
-            margin-left: 0;
-
-        }
-
-        transition: background-color 0.3s ease-in-out,
-        color 0.3s ease-in-out;
+        transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 
         [data-theme="light"] & {
             color: black !important;
+        }
+        @media (max-width: 768px) {
+            margin-left: 0;
         }
     }
 
