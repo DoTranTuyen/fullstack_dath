@@ -52,7 +52,8 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Nhân viên</th>
+                                <th>Tài khoản</th>
+                                <th>Tên nhân viên</th>
                                 <th>Chức vụ</th>
                                 <th>Lương cơ bản</th>
                                 <th>Tổng ca làm</th>
@@ -82,8 +83,12 @@
             <div class="modal-body">
                 <form id="addEmployeeForm">
                     <div class="mb-3">
-                        <label for="username" class="form-label">Tên nhân viên</label>
+                        <label for="username" class="form-label">Tài khoản</label>
                         <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">Tên nhân viên</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" required>
                     </div>
                     <div class="mb-3">
                         <label for="role" class="form-label">Chức vụ</label>
@@ -219,12 +224,13 @@
                 { data: "index", title: "#" },
 
                 { 
-                    data: "username", title: "Nhân viên",
+                    data: "username", title: "Tài khoản",
                     render: function(data, type, row) {
                         const username = row.username || "N/A";
                         return `<i class="fa-solid fa-user-tie"></i> ${username}`;
                     }
                 },
+                { data: "full_name", title: "Tên nhân viên" },
 
                 { 
                     data: "role", 
@@ -371,6 +377,7 @@
             
             const formData = {
                 username: $('#username').val(),
+                full_name: $('#full_name').val(),
                 salary: $('#salary').val(),
                 role: $('#role').val(),
                 csrfmiddlewaretoken: '{{ csrf_token }}'
@@ -394,7 +401,6 @@
                 },
                 error: function(xhr, status, error) {
                     showToast('error', 'Lỗi', 'Không thể thêm nhân viên');
-                    console.error("Lỗi thêm nhân viên:", error);
                 },
                 complete: function() {
                     $('#btnAddEmployee').prop('disabled', false).html('Thêm nhân viên');

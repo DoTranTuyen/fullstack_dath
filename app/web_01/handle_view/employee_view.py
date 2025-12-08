@@ -9,6 +9,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from web_01.management.commands.create_admins import upload_avatar_and_update_employee
 
+
 class EmployeeManagementView(LoginRequiredMixin, TemplateView):
     template_name = '/apps/web_01/employee/employee_list.html'
 
@@ -36,12 +37,13 @@ class EmployeeManagementView(LoginRequiredMixin, TemplateView):
             column_mapping = {
                 0: "user_id",
                 1: "user__username",
-                2: "role",
-                3: "salary",
-                4: "total_shifts",
-                5: "total_hours",
-                6: "actual_salary",
-                7: "created_at"
+                2: "full_name",
+                3: "role",
+                4: "salary",
+                5: "total_shifts",
+                6: "total_hours",
+                7: "actual_salary",
+                8: "created_at"
             }
             order_column = column_mapping.get(order_column_index, "user_id")
             if order_dir == "desc":
@@ -58,7 +60,7 @@ class EmployeeManagementView(LoginRequiredMixin, TemplateView):
                 end_date = datetime.date(year, month + 1, 1)
 
             employees = Employee.objects.select_related('user').filter(~Q(role__iexact='chef'), is_deleted=False)
-            
+
             if filter_name:
                 employees = employees.filter(user__username=filter_name)  # filter theo username chính xác
 
@@ -69,7 +71,8 @@ class EmployeeManagementView(LoginRequiredMixin, TemplateView):
                 employees = employees.filter(
                     Q(user__username__icontains=search_value) |
                     Q(user__first_name__icontains=search_value) |
-                    Q(user__last_name__icontains=search_value)
+                    Q(user__last_name__icontains=search_value) |
+                    Q(full_name__icontains=search_value)
                 )
 
             total_count = employees.count()
@@ -115,6 +118,7 @@ class EmployeeManagementView(LoginRequiredMixin, TemplateView):
                     "index": index,
                     "id": employee.user_id,
                     "username": employee.user.username,
+                    "full_name": employee.full_name,
                     "role": employee.role,
                     "salary": f"{employee.salary:,} VND",
                     "total_shifts": f"{total_shifts:.2f}",
@@ -140,6 +144,7 @@ def employee_add(request):
         return JsonResponse({'success': False, 'message': 'Phương thức không được hỗ trợ'})
 
     try:
+        full_name = request.POST.get('full_name')
         username = request.POST.get('username')
         salary = request.POST.get('salary')
         role = request.POST.get('role', 'staff')  # Default to 'staff' if not provided
@@ -166,6 +171,13 @@ def employee_add(request):
 
         # Check if user exists
         user = User.objects.filter(username=username).first()
+
+        if user:
+            return JsonResponse({
+                'success': False,
+                'message': 'Tên đăng nhập đã tồn tại'
+            })
+
         if not user:
             # Create new user if not exists
             user = User.objects.create_user(
@@ -177,16 +189,16 @@ def employee_add(request):
 
         # Create employee
         employee = Employee.objects.create(
+            full_name=full_name,
             user=user,
             salary=salary,
             role=role
         )
-        upload_avatar_and_update_employee(user,'')
+        upload_avatar_and_update_employee(user, '')
 
         # Create initial work shift with current date
         if total_shifts > 0:
             current_date = timezone.now().date()
-            hours_per_shift = total_hours / total_shifts if total_shifts > 0 else 0
 
             # Create shifts for the employee
             for i in range(total_shifts):
@@ -194,7 +206,6 @@ def employee_add(request):
                 WorkShift.objects.create(
                     employee=employee,
                     date=shift_date
-                    # duration=hours_per_shift
                 )
 
         return JsonResponse({
@@ -203,7 +214,6 @@ def employee_add(request):
         })
 
     except Exception as e:
-        print("🔥 Exception:", str(e))
         return JsonResponse({
             'success': False,
             'message': f'Lỗi: {str(e)}'

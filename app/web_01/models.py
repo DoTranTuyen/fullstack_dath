@@ -185,6 +185,7 @@ class Employee(BaseModel):
         ('staff', 'Staff'),
         ('chef', 'Chef'),
     ]
+    full_name = models.CharField(max_length=100, db_column="ten", null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, db_column="ma_nguoi_dung")
     salary = models.IntegerField(db_column="luong")
     avartar_url = CloudinaryField('avartar_url', null=True, blank=True, db_column="anh_dai_dien")
