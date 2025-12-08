@@ -8,6 +8,7 @@ import Header from "./components/Header"
 import Footer from "./components/Footer"
 import { useParams } from "react-router-dom"
 import MessengerIcon from "../../components/MessengerIcon/MessengerIcon"
+import Chatbot from "../../components/Chatbot/Chatbot"
 import GoToTop from "../../components/GoToTop/GoToTop"
 import PhoneIcon from "../../components/PhoneIcon/PhoneIcon"
 
@@ -24,6 +25,7 @@ const DefaultLayout = ({ children }) => {
         <Footer />
         <PhoneIcon />
         <MessengerIcon />
+        <Chatbot />
         <GoToTop />
       </ThemeContext.Provider>
     // </SocketProvider>
