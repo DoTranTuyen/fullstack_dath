@@ -24,7 +24,7 @@ class GeminiChatbot:
     def __init__(self):
         # Cấu hình Gemini API
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.model = genai.GenerativeModel('gemini-2.0-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
 
         # Thiết lập system prompt
         self.system_prompt = """
@@ -105,7 +105,6 @@ Bot RMS
         # Tải lịch sử chat gần đây để học
         self.load_recent_chat_history()
 
-    
     def load_recent_chat_history(self):
         """Tải lịch sử chat gần đây để học"""
 

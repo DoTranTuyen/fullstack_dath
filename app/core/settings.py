@@ -28,7 +28,7 @@ load_dotenv(os.path.join(BASE_DIR, '..env.dev'))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", 'AIzaSyB9-HJ7Gg7P6Dm2PSadDPpa-u7i_lkb8A8')
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", 'AIzaSyA0qO8wN1XfWx0pM6_dNBTfFkU3MbmH9rA')
 
 FRONT_END_URL = 'http://192.168.20.57:5173'
 CURRENT_URL = 'http://192.168.20.57:8000'
