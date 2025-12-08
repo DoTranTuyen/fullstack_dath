@@ -9,10 +9,6 @@
     <form id="create-table-form">
         <input hidden name='csrfmiddlewaretoken' value='{{ csrf_token }}'/>
         <div class="form-group">
-            <label for="table_number">Số bàn <span class="text-danger">*</span></label>
-            <input type="number" class="form-control" id="table_number" name="table_number" required min="1">
-        </div>
-        <div class="form-group">
             <label for="capacity">Sức chứa</label>
             <input type="number" class="form-control" id="capacity" name="capacity" value="4" min="1">
             <small class="form-text text-muted">Số người tối đa có thể ngồi tại bàn này</small>

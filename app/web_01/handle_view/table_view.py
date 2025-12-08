@@ -90,36 +90,20 @@ def table_create(request):
     # Kiểm tra nếu là AJAX request để hiển thị popup
 
     if request.method == 'POST':
-        print('table_number11', 11)
-        table_number = request.POST.get('table_number')
         capacity = request.POST.get('capacity', 4)  # Thêm trường capacity
-        print('table_number', table_number)
         try:
-            # Kiểm tra số bàn đã tồn tại chưa
-            if Table.objects.filter(table_number=table_number).exists():
-                messages.error(request, f"Bàn số {table_number} đã tồn tại")
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'status': 'error',
-                        'message': f"Bàn số {table_number} đã tồn tại"
-                    }, status=400)
-                return redirect('web_01:manager_table_create')
 
-            print('table_number2233')
             # Tạo bàn mới
             table = Table.objects.create(
-                table_number=int(table_number),
                 capacity=int(capacity),
                 status='available'
             )
-
-            messages.success(request, f"Đã tạo bàn số {table_number}")
 
             # Nếu là AJAX request, trả về JSON response
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'status': 'success',
-                    'message': f"Đã tạo bàn số {table_number}",
+                    'message': f"Đã tạo bàn số {table.table_number} thành công!",
                     'table_id': table.id,
                     'table_number': table.table_number
                 })

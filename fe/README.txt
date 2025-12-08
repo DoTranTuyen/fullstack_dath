@@ -13,8 +13,8 @@
   
 
 
-ws://localhost
-http://localhost
+ws://192.168.20.57
+http://192.168.20.57
 
 
 ---- Nhung file can update IP
