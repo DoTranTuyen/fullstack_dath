@@ -30,8 +30,8 @@ load_dotenv(os.path.join(BASE_DIR, '..env.dev'))
 SECRET_KEY = os.environ.get("SECRET_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", 'AIzaSyA0qO8wN1XfWx0pM6_dNBTfFkU3MbmH9rA')
 
-FRONT_END_URL = 'http://192.168.20.57:5173'
-CURRENT_URL = 'http://192.168.20.57:8000'
+FRONT_END_URL = 'http://192.168.1.114:5173'
+CURRENT_URL = 'http://192.168.1.114:8000'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
