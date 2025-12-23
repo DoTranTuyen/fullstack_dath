@@ -33,7 +33,7 @@ export const SocketProvider = ({ children }) => {
 
   // Initialize WebSocket connection on mount
   useEffect(() => {
-    const ws = new WebSocket("ws://192.168.1.114:5001/ws/notifications/order/");
+    const ws = new WebSocket("ws://192.168.20.57:5001/ws/notifications/order/");
 
     ws.onopen = () => console.log("✅ WebSocket connected!");
     ws.onclose = (event) => console.log("❌ WebSocket disconnected!", event);

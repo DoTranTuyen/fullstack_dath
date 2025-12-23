@@ -59,7 +59,7 @@ const BookTable = () => {
     }
 
     try {
-      const response = await axios.post('http://192.168.1.114:8000/api/book/tables/reservations/', formData)
+      const response = await axios.post('http://192.168.20.57:8000/api/book/tables/reservations/', formData)
       toast.success(response.data.message)
       setFormData({
         name: '',

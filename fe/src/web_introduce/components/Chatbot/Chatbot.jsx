@@ -58,7 +58,7 @@ const Chatbot = () => {
         setIsLoading(true);
 
         try {
-            const response = await axios.get('http://192.168.20.57:8000/chatbot/customer', {
+            const response = await axios.get('http://192.168.20.57:8000/api/chatbot/customer', {
                 params: {
                     message: inputValue,
                 },
@@ -82,7 +82,7 @@ const Chatbot = () => {
         setIsLoading(true);
 
         try {
-            const response = await axios.get('http://192.168.20.57:8000/chatbot/customer', { params: { message: suggestion } });
+            const response = await axios.get('http://192.168.20.57:8000/api/chatbot/customer', { params: { message: suggestion } });
             const botMessage = { sender: 'bot', text: response.data.reply };
             setMessages(prev => [...prev, botMessage]);
         } catch (error) {

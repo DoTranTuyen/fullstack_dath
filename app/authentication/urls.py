@@ -2,7 +2,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from authentication import views
-from authentication.ai_view import FoodSuggestionView
+from authentication.chatbot_customer.chatbot_customer_view import CustomerChatAPI
 app_name = "api"
 # primary path: /api/
 
@@ -18,6 +18,6 @@ urlpatterns = [
     path("auth/login/",  views.LoginView.as_view(), name='login'),
     path("auth/session/",  views.SessionView.as_view(), name='current_session'),
     path("end-session/",  views.EndSessionView.as_view(), name='end_session'),
-    # path("suggestion/",  FoodSuggestionView.as_view(), name='food_suggestion'),
+    path("chatbot/customer/", CustomerChatAPI.as_view(), name="customer_chatbot"),
     path("", include(router.urls)),
 ]

@@ -8,6 +8,7 @@ import { useParams } from 'react-router-dom'
 import { CartProvider } from '../../context/CartContext'
 import { AuthProvider } from '../../context/AuthContext'
 import CallStaffButton from '../../components/CallStaffButton/CallStaffButton'
+import ChatBotMobile from '../../components/ChatBotMobile/ChatBotMobile'
 
 const cx = classNames.bind(styles)
 
@@ -29,6 +30,7 @@ const MobileLayout = ({ children }) => {
                     </div>
                     <Footer />
                     <CallStaffButton />
+                    <ChatBotMobile />
                 </div>
             </CartProvider>
         </AuthProvider>

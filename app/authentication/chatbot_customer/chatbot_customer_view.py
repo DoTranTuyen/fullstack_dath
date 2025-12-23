@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from web_01.chatbot_customer.gemini_service_customer import CustomerChatbot
+from authentication.chatbot_customer.gemini_service_customer import CustomerChatbot
 
 
 class CustomerChatAPI(APIView):
