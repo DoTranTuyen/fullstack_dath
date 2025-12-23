@@ -892,12 +892,7 @@
         // Helper function to show toast notifications
         function showToast(type, title, message) {
             // Check if your template has a toast function
-            if (typeof window.showToast === 'function') {
-                window.showToast(type, title, message);
-            } else {
-                // Fallback alert if no toast function exists
-                alert(`${title}: ${message}`);
-            }
+            window.showToast(type, title, message);
         }
 
         // Set default date values to today

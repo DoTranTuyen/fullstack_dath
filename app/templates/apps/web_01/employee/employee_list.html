@@ -53,6 +53,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Tài khoản</th>
+                                <th>Email</th>
                                 <th>Tên nhân viên</th>
                                 <th>Chức vụ</th>
                                 <th>Lương cơ bản</th>
@@ -85,6 +86,10 @@
                     <div class="mb-3">
                         <label for="username" class="form-label">Tài khoản</label>
                         <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="text" class="form-control" id="email" name="email" required>
                     </div>
                     <div class="mb-3">
                         <label for="full_name" class="form-label">Tên nhân viên</label>
@@ -125,9 +130,19 @@
                 <form id="editEmployeeForm">
                     <input type="hidden" id="editEmployeeId" name="employee_id">
                     <div class="mb-3">
-                        <label for="editUsername" class="form-label">Tên nhân viên</label>
+                        <label for="editUsername" class="form-label">Tài khoản</label>
                         <input type="text" class="form-control" id="editUsername" name="username" required>
                     </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="text" class="form-control" id="editEmail" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editFullName" class="form-label">Tên nhân viên</label>
+                        <input type="text" class="form-control" id="editFullName" name="name" required>
+                    </div>
+
+
                     <div class="mb-3">
                         <label for="editRole" class="form-label">Chức vụ</label>
                         <select class="form-control" id="editRole" name="role" required>
@@ -230,6 +245,7 @@
                         return `<i class="fa-solid fa-user-tie"></i> ${username}`;
                     }
                 },
+                { data: "email", title: "Email" },
                 { data: "full_name", title: "Tên nhân viên" },
 
                 { 
@@ -285,6 +301,8 @@
                                 <button type='button' class="btn btn-light btn-sm me-1 edit-employee"
                                     data-id="${row.id}" 
                                     data-username="${row.username}" 
+                                    data-full_name="${row.full_name}" 
+                                    data-email="${row.email}"
                                     data-role="${row.role}" 
                                     data-salary="${row.salary.replace(' VND', '')}"
                                     data-shifts="${row.total_shifts}"
@@ -337,6 +355,8 @@
         $(document).on('click', '.edit-employee', function() {
             const id = $(this).data('id');
             const username = $(this).data('username');
+            const full_name = $(this).data('full_name');
+            const email = $(this).data('email');
             const salary = $(this).data('salary');
             const role = $(this).data('role');
 
@@ -345,6 +365,8 @@
 
             $('#editEmployeeId').val(id);
             $('#editUsername').val(username);
+            $('#editFullName').val(full_name);
+            $('#editEmail').val(email);
             $('#editSalary').val(salary);
             $('#editRole').val(role);
 
@@ -380,6 +402,7 @@
                 full_name: $('#full_name').val(),
                 salary: $('#salary').val(),
                 role: $('#role').val(),
+                email: $('#email').val(),
                 csrfmiddlewaretoken: '{{ csrf_token }}'
             };
             
@@ -419,6 +442,8 @@
             
             const formData = {
                 employee_id: $('#editEmployeeId').val(),
+                email: $('#editEmail').val(),
+                full_name: $('#editFullName').val(),
                 username: $('#editUsername').val(),
                 salary: $('#editSalary').val(),
                 role: $('#editRole').val(),
@@ -485,13 +510,8 @@
 
         // Helper function to show toast notifications
         function showToast(type, title, message) {
-            // Check if your template has a toast function
-            if (typeof window.showToast === 'function') {
-                window.showToast(type, title, message);
-            } else {
-                // Fallback alert if no toast function exists
-                alert(`${title}: ${message}`);
-            }
+
+            displayNotification(message, type);
         }
     });
 </script>

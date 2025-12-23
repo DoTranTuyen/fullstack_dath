@@ -37,13 +37,14 @@ class EmployeeManagementView(LoginRequiredMixin, TemplateView):
             column_mapping = {
                 0: "user_id",
                 1: "user__username",
-                2: "full_name",
-                3: "role",
-                4: "salary",
-                5: "total_shifts",
-                6: "total_hours",
-                7: "actual_salary",
-                8: "created_at"
+                2: "email",
+                3: "full_name",
+                4: "role",
+                5: "salary",
+                6: "total_shifts",
+                7: "total_hours",
+                8: "actual_salary",
+                9: "created_at"
             }
             order_column = column_mapping.get(order_column_index, "user_id")
             if order_dir == "desc":
@@ -72,6 +73,7 @@ class EmployeeManagementView(LoginRequiredMixin, TemplateView):
                     Q(user__username__icontains=search_value) |
                     Q(user__first_name__icontains=search_value) |
                     Q(user__last_name__icontains=search_value) |
+                    Q(email__icontains=search_value) |
                     Q(full_name__icontains=search_value)
                 )
 
@@ -118,6 +120,7 @@ class EmployeeManagementView(LoginRequiredMixin, TemplateView):
                     "index": index,
                     "id": employee.user_id,
                     "username": employee.user.username,
+                    "email": employee.email,
                     "full_name": employee.full_name,
                     "role": employee.role,
                     "salary": f"{employee.salary:,} VND",
@@ -146,6 +149,7 @@ def employee_add(request):
     try:
         full_name = request.POST.get('full_name')
         username = request.POST.get('username')
+        email = request.POST.get('email')
         salary = request.POST.get('salary')
         role = request.POST.get('role', 'staff')  # Default to 'staff' if not provided
         total_shifts = request.POST.get('total_shifts', '0')
@@ -170,7 +174,7 @@ def employee_add(request):
             })
 
         # Check if user exists
-        user = User.objects.filter(username=username).first()
+        user = User.objects.filter(username=username, email=email).first()
 
         if user:
             return JsonResponse({
@@ -183,6 +187,7 @@ def employee_add(request):
             user = User.objects.create_user(
                 username=username,
                 first_name=username,
+                email=email,
                 password='123456',
                 is_active=True
             )
@@ -190,6 +195,7 @@ def employee_add(request):
         # Create employee
         employee = Employee.objects.create(
             full_name=full_name,
+            email=email,
             user=user,
             salary=salary,
             role=role
@@ -214,9 +220,12 @@ def employee_add(request):
         })
 
     except Exception as e:
+        raw_message = str(e)
+        clean_message = raw_message.split(":")[0]
+
         return JsonResponse({
             'success': False,
-            'message': f'Lỗi: {str(e)}'
+            'message': clean_message
         })
 
 
@@ -228,6 +237,8 @@ def employee_update(request):
 
     try:
         employee_id = request.POST.get('employee_id')
+        email = request.POST.get('email')
+        full_name = request.POST.get('full_name')
         username = request.POST.get('username')
         salary = request.POST.get('salary')
         role = request.POST.get('role')  # Get role from form
@@ -258,6 +269,8 @@ def employee_update(request):
 
         # Update employee
         employee.salary = salary
+        employee.email = email
+        employee.full_name = full_name
         if role:
             employee.role = role  # Update role if provided
         employee.save()
@@ -268,33 +281,12 @@ def employee_update(request):
             user.username = username
             user.save()
 
-        # Create new work shift with updated status and type
-        current_date = timezone.now().date()
-
-        # Check if a shift already exists for this employee, date, and shift type
-        existing_shift = WorkShift.objects.filter(
-            employee=employee,
-            date=current_date,
-        ).first()
-
-        if existing_shift:
-            # Update existing shift
-            existing_shift.save()
-        else:
-            # Create new shift
-            WorkShift.objects.create(
-                employee=employee,
-                date=current_date,  # Add the date field
-                duration=4.0  # Default duration is 4 hours
-            )
-
         return JsonResponse({
             'success': True,
             'message': 'Cập nhật nhân viên thành công'
         })
 
     except Exception as e:
-        print("🔥 Exception:", str(e))
         return JsonResponse({
             'success': False,
             'message': f'Lỗi: {str(e)}'
