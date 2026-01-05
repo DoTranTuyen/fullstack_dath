@@ -17,7 +17,7 @@ class WorkShiftManagementView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         # Lấy danh sách nhân viên để hiển thị trong dropdown
 
-        if hasattr(self.request.user,'employee')  and self.request.user.employee.role == 'staff':
+        if hasattr(self.request.user, 'employee') and self.request.user.employee.role == 'staff':
             context['employees'] = Employee.objects.select_related('user').filter(user=self.request.user)
         else:
             context['employees'] = Employee.objects.select_related('user').all()
@@ -60,11 +60,10 @@ def work_shift_list(request):
         if order_dir == "desc":
             order_column = "-" + order_column
 
-        
-        if hasattr(request.user,'employee') and request.user.employee.role == 'staff':
-            work_shifts = WorkShift.objects.select_related('employee', 'employee__user').filter(employee=request.user.employee)
-        else:
-            work_shifts = WorkShift.objects.select_related('employee', 'employee__user')
+        # if hasattr(request.user,'employee') and request.user.employee.role == 'staff':
+        #     work_shifts = WorkShift.objects.select_related('employee', 'employee__user').filter(employee=request.user.employee)
+        # else:
+        work_shifts = WorkShift.objects.select_related('employee', 'employee__user')
         # Query cơ bản
 
         # Áp dụng các bộ lọc
@@ -200,7 +199,7 @@ def shift_registration_list(request):
         else:
             registrations = ShiftRegistration.objects.select_related('employee', 'employee__user')
 
-        print('registrations',registrations)
+        print('registrations', registrations)
         # Áp dụng các bộ lọc
         # if filter_employee:
         #     registrations = registrations.filter(employee_id=filter_employee)
@@ -246,7 +245,6 @@ def shift_registration_list(request):
         shift_types = dict(WorkShift.SHIFT_TYPE_CHOICES)
         status_types = dict(ShiftRegistration.STATUS_CHOICES)
 
-        
         registrations_data = []
         for index, reg in enumerate(registrations, start=start + 1):
             registrations_data.append({
