@@ -69,6 +69,173 @@ def index(request):
     return redirect('web_01:service_list')  # Đảm bảo bạn có URL name này
 
 
+def calc_retention(start_date, end_date, label):
+    customers = Session.objects.filter(
+        started_at__date__range=[start_date, end_date]
+    ).values_list('customer_id', flat=True).distinct()
+
+    new_customers = []
+    returning_customers = []
+
+    for cid in customers:
+        existed = Session.objects.filter(
+            customer_id=cid,
+            started_at__date__lt=start_date
+        ).exists()
+
+        if existed:
+            returning_customers.append(cid)
+        else:
+            new_customers.append(cid)
+
+    # ===== TIỀN KHÁCH MỚI =====
+    new_revenue = Invoice.objects.filter(
+        session__customer_id__in=new_customers,
+        created_at__date__range=[start_date, end_date],
+        is_deleted=False
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    # ===== TIỀN KHÁCH QUAY LẠI =====
+    returning_revenue = Invoice.objects.filter(
+        session__customer_id__in=returning_customers,
+        created_at__date__range=[start_date, end_date],
+        is_deleted=False
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    return {
+        "label": label,
+        "new": len(new_customers),
+        "returning": len(returning_customers),
+        "new_revenue": new_revenue,
+        "returning_revenue": returning_revenue,
+        "total_revenue": new_revenue + returning_revenue
+    }
+
+
+def build_retention_block(today, mode):
+    data = []
+
+    if mode == "day":
+        for i in range(6, -1, -1):
+            start = end = today - timedelta(days=i)
+            label = start.strftime('%d/%m')
+
+            data.append(calc_retention(start, end, label))
+
+    elif mode == "week":
+        for i in range(5, -1, -1):
+            start = today - timedelta(days=today.weekday()) - timedelta(weeks=i)
+            end = start + timedelta(days=6)
+            label = f"Tuần {start.strftime('%d/%m')}"
+
+            data.append(calc_retention(start, end, label))
+
+    else:
+        for i in range(5, -1, -1):
+            month = today.replace(day=1) - timedelta(days=30*i)
+            start = month.replace(day=1)
+            end = (start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            label = start.strftime('%m/%Y')
+
+            data.append(calc_retention(start, end, label))
+
+    return data
+
+
+def calc_inventory_stats(start_date, end_date, label):
+    """Thống kê nhập xuất kho với chi tiết nguyên liệu"""
+    logs = InventoryLog.objects.filter(
+        last_updated__date__range=[start_date, end_date]
+    )
+
+    # Tổng số lượng nhập
+    import_total = logs.filter(
+        type__in=['import', 'adjustment'],
+        change__gt=0
+    ).aggregate(total=Sum('change'))['total'] or 0
+
+    # Tổng số lượng xuất
+    export_total = abs(logs.filter(
+        type__in=['export', 'sell'],
+        change__lt=0
+    ).aggregate(total=Sum('change'))['total'] or 0)
+
+    # Số lần nhập/xuất
+    import_count = logs.filter(type__in=['import', 'adjustment'], change__gt=0).count()
+    export_count = logs.filter(type__in=['export', 'sell'], change__lt=0).count()
+
+    # ===== CHI TIẾT NGUYÊN LIỆU NHẬP =====
+    import_details = logs.filter(
+        type__in=['import', 'adjustment'],
+        change__gt=0
+    ).values(
+        'ingredient__name',
+        'ingredient__unit'
+    ).annotate(
+        total_quantity=Sum('change')
+    ).order_by('-total_quantity')[:5]  # Top 5 nguyên liệu nhập nhiều nhất
+
+    # ===== CHI TIẾT NGUYÊN LIỆU XUẤT =====
+    export_details = logs.filter(
+        type__in=['export', 'sell'],
+        change__lt=0
+    ).values(
+        'ingredient__name',
+        'ingredient__unit'
+    ).annotate(
+        total_quantity=Sum('change')
+    ).order_by('total_quantity')[:5]  # Top 5 nguyên liệu xuất nhiều nhất
+
+    # Format lại để dễ hiển thị
+    import_list = [
+        f"{item['ingredient__name']}: {item['total_quantity']} {item['ingredient__unit']}"
+        for item in import_details
+    ]
+
+    export_list = [
+        f"{item['ingredient__name']}: {abs(item['total_quantity'])} {item['ingredient__unit']}"
+        for item in export_details
+    ]
+
+    return {
+        "label": label,
+        "import": import_total,
+        "export": export_total,
+        "import_count": import_count,
+        "export_count": export_count,
+        "import_details": import_list,  # Danh sách nguyên liệu nhập
+        "export_details": export_list,  # Danh sách nguyên liệu xuất
+    }
+
+
+def build_inventory_block(today, mode):
+    """Xây dựng dữ liệu nhập xuất kho theo ngày/tuần/tháng"""
+    data = []
+
+    if mode == "day":
+        for i in range(6, -1, -1):
+            start = end = today - timedelta(days=i)
+            label = start.strftime('%d/%m')
+            data.append(calc_inventory_stats(start, end, label))
+
+    elif mode == "week":
+        for i in range(5, -1, -1):
+            start = today - timedelta(days=today.weekday()) - timedelta(weeks=i)
+            end = start + timedelta(days=6)
+            label = f"Tuần {start.strftime('%d/%m')}"
+            data.append(calc_inventory_stats(start, end, label))
+
+    else:  # month
+        for i in range(5, -1, -1):
+            month = today.replace(day=1) - timedelta(days=30*i)
+            start = month.replace(day=1)
+            end = (start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            label = start.strftime('%m/%Y')
+            data.append(calc_inventory_stats(start, end, label))
+
+    return data
+
+
 @admin_required
 def dashboard(request):
     """Dashboard chính hiển thị thông tin tổng quan"""
@@ -155,6 +322,10 @@ def dashboard(request):
     ingredient_labels = [ing.name for ing in top_ingredients]
     ingredient_stocks = [ing.quantity_in_stock for ing in top_ingredients]
 
+    retention_day = build_retention_block(today, "day")
+    retention_week = build_retention_block(today, "week")
+    retention_month = build_retention_block(today, "month")
+
     # Thêm dữ liệu vào context
     context = {
         'total_orders_today': total_orders_today,
@@ -171,6 +342,23 @@ def dashboard(request):
         'ingredient_labels': ingredient_labels,
         'ingredient_stocks': ingredient_stocks,
     }
+
+    context.update({
+        "retention_day": retention_day,
+        "retention_week": retention_week,
+        "retention_month": retention_month,
+    })
+
+    inventory_day = build_inventory_block(today, "day")
+    inventory_week = build_inventory_block(today, "week")
+    inventory_month = build_inventory_block(today, "month")
+
+    context.update({
+        # ... context hiện tại ...
+        "inventory_day": inventory_day,
+        "inventory_week": inventory_week,
+        "inventory_month": inventory_month,
+    })
 
     return render(request, 'apps/web_01/dashboard/dashboard_2.html', context)
 

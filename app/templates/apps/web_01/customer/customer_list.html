@@ -19,7 +19,6 @@
                                 <th>Số Điện Thoại</th>
                                 <th>Điểm tích lũy</th>
                                 <th>Ngày tạo</th>
-                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -134,22 +133,6 @@
                     data: "created_at", title: "Ngày tạo",
                     render: function(data) {
                         return `<i class="fa fa-calendar"></i> ${data}`;
-                    }
-                },
-                { 
-                    data: "id", title: "Thao tác",
-                    render: function(data, type, row) {
-                        return `
-                            <button type='button' class="btn light btn-primary shadow btn-xs sharp me-1 edit-customer" 
-                            data-id="${row.id}" data-username="${row.username}" data-loyalty="${row.loyalty_points}">
-                                <i class="fa fa-pencil"></i>
-                            </button>
-
-                            <button type='button' class="btn light btn-danger shadow btn-xs sharp me-1 delete-customer" 
-                            data-id="${row.id}">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        `;
                     }
                 }
             ]

@@ -155,7 +155,6 @@
     </div>
 </div>
 
-<!-- Biểu đồ doanh thu theo danh mục và tồn kho nguyên liệu -->
 <div class="row">
     <div class="col-xl-6 col-lg-12">
         <div class="card">
@@ -167,7 +166,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-6 col-lg-12">
+       <div class="col-xl-6 col-lg-12">
         <div class="card">
             <div class="card-header border-0 pb-0">
                 <h4 class="card-title">Tồn kho nguyên liệu chính</h4>
@@ -177,6 +176,56 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Biểu đồ doanh thu theo danh mục và tồn kho nguyên liệu -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header border-0 pb-0">
+                <h4 class="card-title">Khách hàng</h4>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-mode="day">Ngày</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-mode="week">Tuần</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-mode="month">Tháng</button>
+                </li>
+            </ul>
+
+            <canvas id="retentionChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header border-0 pb-0">
+                <h4 class="card-title">Nhập xuất kho</h4>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-mode="day" data-chart="inventory">Ngày</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-mode="week" data-chart="inventory">Tuần</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-mode="month" data-chart="inventory">Tháng</button>
+                    </li>
+                </ul>
+
+                <canvas id="inventoryChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- Trạng thái bàn - Phiên bản cải tiến -->
@@ -233,6 +282,234 @@
 {% block script %}
 <script>
         document.addEventListener('DOMContentLoaded', function() {
+
+        // Dữ liệu nhập xuất kho
+        const inventoryData = {
+            day: {{ inventory_day|tojson }},
+            week: {{ inventory_week|tojson }},
+            month: {{ inventory_month|tojson }}
+        };
+
+        const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+
+        // Tính max cho trục Y
+        const allImports = inventoryData.day.map(i => i.import || 0);
+        const allExports = inventoryData.day.map(i => i.export || 0);
+        const maxInventory = Math.max(...allImports, ...allExports);
+
+        let currentInventoryMode = 'day';
+
+        const inventoryChart = new Chart(inventoryCtx, {
+            type: 'bar',
+            data: buildInventoryDataset('day'),
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                // Bỏ hiển thị giá trị, chỉ giữ label
+                                return context.dataset.label;
+                            },
+                            afterLabel: function(context) {
+                                const index = context.dataIndex;
+                                const data = inventoryData[currentInventoryMode][index];
+                                
+                                if (context.datasetIndex === 0) {
+                                    // Nhập kho
+                                    return 'Số lần nhập: ' + (data.import_count || 0);
+                                } else if (context.datasetIndex === 1) {
+                                    // Xuất kho
+                                    return 'Số lần xuất: ' + (data.export_count || 0);
+                                }
+                                return '';
+                            },
+                            footer: function(tooltipItems) {
+                                const index = tooltipItems[0].dataIndex;
+                                const data = inventoryData[currentInventoryMode][index];
+                                
+                                let footer = [];
+                                
+                                if (tooltipItems[0].datasetIndex === 0 && data.import_details && data.import_details.length > 0) {
+                                    // Hiển thị nguyên liệu nhập
+                                    footer.push('─────────────────');
+                                    footer.push('Top nguyên liệu nhập:');
+                                    data.import_details.forEach(item => {
+                                        footer.push('• ' + item);
+                                    });
+                                } else if (tooltipItems[0].datasetIndex === 1 && data.export_details && data.export_details.length > 0) {
+                                    // Hiển thị nguyên liệu xuất
+                                    footer.push('─────────────────');
+                                    footer.push('Top nguyên liệu xuất:');
+                                    data.export_details.forEach(item => {
+                                        footer.push('• ' + item);
+                                    });
+                                }
+                                
+                                return footer.join('\n');
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        min: 0,
+                        max: Math.max(50, Math.ceil(maxInventory / 10) * 10),
+                        ticks: {
+                            stepSize: 5,
+                            precision: 0
+                        },
+                        title: {
+                            display: true,
+                            text: 'Số lượng'
+                        }
+                    }
+                }
+            }
+        });
+
+        function buildInventoryDataset(mode) {
+            currentInventoryMode = mode;
+            
+            return {
+                labels: inventoryData[mode].map(i => i.label),
+                datasets: [
+                    {
+                        label: 'Nhập kho',
+                        data: inventoryData[mode].map(i => i.import || 0),
+                        backgroundColor: '#28a745',
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Xuất kho',
+                        data: inventoryData[mode].map(i => i.export || 0),
+                        backgroundColor: '#dc3545',
+                        yAxisID: 'y'
+                    }
+                ]
+            };
+        }
+
+        // Event listener cho tabs nhập xuất kho
+        document.querySelectorAll('[data-chart="inventory"]').forEach(tab => {
+            tab.addEventListener('click', function () {
+                document.querySelectorAll('[data-chart="inventory"]').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                const mode = this.dataset.mode;
+                
+                // Tính lại max cho mode mới
+                const imports = inventoryData[mode].map(i => i.import || 0);
+                const exports = inventoryData[mode].map(i => i.export || 0);
+                const newMax = Math.max(...imports, ...exports);
+                
+                inventoryChart.options.scales.y.max = Math.max(50, Math.ceil(newMax / 10) * 10);
+                inventoryChart.data = buildInventoryDataset(mode);
+                inventoryChart.update();
+            });
+        });
+
+
+            const retentionData = {
+                    day: {{ retention_day|tojson }},
+                    week: {{ retention_week|tojson }},
+                    month: {{ retention_month|tojson }}
+                };
+
+                const ctx = document.getElementById('retentionChart').getContext('2d');
+
+            const customers = retentionData.day.map(i => (i.new || 0) + (i.returning || 0));
+            const maxCustomers = Math.max(...customers);
+
+            // Biến để track mode hiện tại
+            let currentMode = 'day';
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: buildDataset('day'),
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const index = context.dataIndex;
+                                    const data = retentionData[currentMode][index];
+                                    
+                                    if (context.datasetIndex === 0) {
+                                        // Khách mới
+                                        return 'Doanh thu: ' + (data.new_revenue || 0).toLocaleString() + ' đ';
+                                    } else if (context.datasetIndex === 1) {
+                                        // Khách quay lại
+                                        return 'Doanh thu: ' + (data.returning_revenue || 0).toLocaleString() + ' đ';
+                                    }
+                                    return '';
+                                },
+                                footer: function(tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    const data = retentionData[currentMode][index];
+                                    return 'Tổng doanh thu: ' + (data.total_revenue || 0).toLocaleString() + ' đ';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            min: 0,
+                            max: Math.max(30, Math.ceil(maxCustomers / 2) * 2),
+                            ticks: {
+                                stepSize: 2,
+                                precision: 0
+                            },
+                            title: {
+                                display: true,
+                                text: 'Số khách'
+                            }
+                        }
+                    }
+                }
+            });
+
+                function buildDataset(mode) {
+                    currentMode = mode; // Lưu mode hiện tại
+                    
+                    return {
+                        labels: retentionData[mode].map(i => i.label),
+                        datasets: [
+                            {
+                                label: 'Khách mới',
+                                data: retentionData[mode].map(i => i.new || 0),
+                                backgroundColor: '#3b7ddd',
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Khách quay lại',
+                                data: retentionData[mode].map(i => i.returning || 0),
+                                backgroundColor: '#28a745',
+                                yAxisID: 'y'
+                            }
+                        ]
+                    };
+                }
+
+
+                document.querySelectorAll('.nav-link').forEach(tab => {
+                    tab.addEventListener('click', function () {
+                        document.querySelectorAll('.nav-link').forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+
+                        const mode = this.dataset.mode;
+                        chart.data = buildDataset(mode);
+                        chart.update();
+                    });
+                });
+
+
             // Dữ liệu cho biểu đồ doanh thu 7 ngày gần nhất
             var revenueCtx = document.getElementById('revenueChart').getContext('2d');
             var revenueChart = new Chart(revenueCtx, {
